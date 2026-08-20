@@ -54,7 +54,7 @@
         .header-actions { display: flex; gap: 6px; }
         .btn-header { padding: 6px 10px; font-size: 11px; border: 1px solid var(--border-line); background: #F5F2EC; border-radius: 6px; }
 
-        /* 🚗 운전자 화면 (첨부 1 디자인 반영 메트로 노선도) */
+        /* 🚗 운전자 화면 */
         #driver-view-container {
             position: absolute;
             top: 52px; left: 0; right: 0; bottom: 0;
@@ -79,7 +79,7 @@
         .driver-action-buttons { display: flex; gap: 6px; }
         .btn-test-action { padding: 6px 10px; font-size: 11px; border-radius: 6px; border: none; color: #fff; font-weight: 800; }
 
-        /* 메트로 노선 뷰 (스크롤/드래그 지원) */
+        /* 메트로 노선 뷰 */
         .metro-scroll-container {
             flex: 1;
             padding: 24px 20px 80px 30px;
@@ -93,7 +93,6 @@
             position: relative;
             min-height: 80px;
         }
-        /* 세로 기둥 선 */
         .metro-track-item::before {
             content: '';
             position: absolute;
@@ -112,7 +111,6 @@
             display: none;
         }
 
-        /* 원형 노드 아이콘 */
         .metro-node {
             width: 30px;
             height: 30px;
@@ -137,7 +135,6 @@
             background: #fff;
         }
 
-        /* 우측 텍스트 및 원생 정보 */
         .metro-content {
             margin-left: 16px;
             flex: 1;
@@ -180,7 +177,6 @@
             color: var(--metro-green);
         }
 
-        /* 하단 플로팅 버튼 */
         .driver-floating-map-btn {
             position: absolute;
             right: 18px;
@@ -199,7 +195,7 @@
             z-index: 50;
         }
 
-        /* 📱 2. 학부모(사용자) 화면 (3단 분할) */
+        /* 📱 학부모(사용자) 화면 */
         #user-view-container {
             position: absolute;
             top: 52px; left: 0; right: 0; bottom: 0;
@@ -246,7 +242,7 @@
         .btn-quick-msg { padding: 12px 6px; background: var(--surface-white); border: 1px solid var(--border-line); border-radius: 10px; font-size: 11px; font-weight: 800; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .btn-quick-msg.active { background: var(--metro-red); border-color: var(--metro-red); color: #fff; }
 
-        /* 🗺️ 3. 지도 보기 & 픽업 등록 모달 */
+        /* 🗺️ 지도 보기 및 플로팅 모달 */
         #map-view-modal {
             position: fixed;
             inset: 0;
@@ -266,7 +262,6 @@
         }
         #full-route-map { flex: 1; position: relative; }
 
-        /* 📍 픽업 지정 논블로킹 플로팅 팝업 (배경 지도 조작 가능) */
         #floating-pickup-card {
             position: absolute;
             bottom: 20px;
@@ -324,7 +319,6 @@
 </head>
 <body>
 
-<!-- 상단 헤더 -->
 <header class="app-header">
     <div class="header-brand">
         <span>🚐</span>
@@ -344,13 +338,12 @@
             <span id="driver-gps-status-text">GPS 대기</span>
         </div>
         <div class="driver-action-buttons">
-            <button type="button" class="btn-test-action" id="btn-driver-gps-toggle" style="background:var(--metro-blue);">GPS 전송</button>
+            <button type="button" class="btn-test-action" id="btn-driver-gps-toggle" style="background:var(--metro-blue);">위치 전송 시작</button>
             <button type="button" class="btn-test-action" id="btn-simulate-arrive" style="background:var(--metro-orange);">📍 다음도착(시뮬)</button>
             <button type="button" class="btn-test-action" id="btn-reset-data" style="background:var(--text-sub);">🔄 리셋</button>
         </div>
     </div>
 
-    <!-- 첨부 1 디자인 반영: 메트로 노선도 리스트 -->
     <div class="metro-scroll-container" id="metro-stops-container"></div>
 
     <button type="button" class="driver-floating-map-btn" id="btn-open-map-view">
@@ -402,7 +395,7 @@
     </div>
 </main>
 
-<!-- 🗺️ 3. 지도 보기 및 픽업 등록 모달 (네이버 경유 길찾기 렌더링) -->
+<!-- 🗺️ 3. 지도 보기 및 픽업 등록 모달 -->
 <div id="map-view-modal">
     <div class="map-view-header">
         <input type="text" id="map-search-input" placeholder="정차지 검색 (예: 래미안 101동)" style="flex:1;" />
@@ -411,7 +404,6 @@
     </div>
     <div id="full-route-map"></div>
 
-    <!-- 지도가 보이는 상태에서 하단에 플로팅되는 픽업 등록 카드 -->
     <div id="floating-pickup-card">
         <div style="font-size:13px; font-weight:900; display:flex; justify-content:space-between;">
             <span>📍 픽업 위치 및 원생 지정</span>
@@ -517,7 +509,6 @@
             zoom: 14
         });
 
-        // 배경 지도 터치 시 플로팅 카드 열기 / 배경 터치 닫기 지원
         naver.maps.Event.addListener(fullMap, 'click', (e) => {
             tempPickerCoord = { lat: e.coord.lat(), lng: e.coord.lng() };
             const card = document.getElementById('floating-pickup-card');
@@ -548,12 +539,11 @@
         });
     }
 
-    // 🚗 1. 운전자 메트로 노선도 렌더링 (첨부 1 디자인 반영)
+    // 🚗 1. 운전자 메트로 노선도 렌더링
     function renderDriverMetroTimeline() {
         const container = document.getElementById('metro-stops-container');
         container.innerHTML = '';
 
-        // 무조건 시간 순서대로 정렬 (시간과 순번이 절대 뒤섞이지 않음)
         const sortedStops = Object.values(stopsData).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         if (sortedStops.length === 0) {
             container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-sub); font-size:12px;">등록된 정차지가 없습니다.<br>하단 버튼을 눌러 위치를 등록하세요.</div>';
@@ -564,7 +554,6 @@
 
         sortedStops.forEach((stop, idx) => {
             const isPassed = idx < currentIdx;
-            const isCurrent = idx === currentIdx;
 
             const assignedStudents = Object.values(usersData).filter(u => u.stopId === stop.id).slice(0, 3);
 
@@ -607,7 +596,6 @@
         });
     }
 
-    // 📍 네이버 경유 길찾기 지도 렌더링
     function renderFullMapRoute() {
         if (!fullMap) return;
         if (fullMapPolyline) { fullMapPolyline.setMap(null); fullMapPolyline = null; }
@@ -629,7 +617,6 @@
             strokeLineJoin: 'round'
         });
 
-        // 각 정차지 마커 및 구간 화살표 생성
         sortedStops.forEach((s, idx) => {
             new naver.maps.Marker({
                 position: new naver.maps.LatLng(s.lat, s.lng),
@@ -646,7 +633,86 @@
         });
     }
 
-    // 🕹️ 테스트용 버튼 핸들러
+    // 📡 스마트 GPS 위치 수신 및 전송 로직
+    const btnDriverGpsToggle = document.getElementById('btn-driver-gps-toggle');
+    const driverGpsDot = document.getElementById('driver-gps-dot');
+    const driverGpsText = document.getElementById('driver-gps-status-text');
+
+    function onGpsSuccess(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        update(ref(db, 'shuttle_v2/live'), {
+            lat: lat,
+            lng: lng,
+            active: true,
+            updatedAt: Date.now()
+        });
+
+        driverGpsDot.classList.add('active');
+        driverGpsText.textContent = "전송 중";
+    }
+
+    function onGpsError(err) {
+        console.warn("GPS 상태 알림:", err);
+        if (err.code === 1) {
+            showToast("위치 권한을 허용해주세요.");
+            stopGps();
+        } else {
+            // 실내 타임아웃 시 Wi-Fi 기반 일반 정확도로 백그라운드 재시도
+            navigator.geolocation.getCurrentPosition(onGpsSuccess, null, {
+                enableHighAccuracy: false,
+                timeout: 15000,
+                maximumAge: 10000
+            });
+        }
+    }
+
+    function startGps() {
+        if (!navigator.geolocation) {
+            alert("위치 서비스를 지원하지 않는 브라우저입니다.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(onGpsSuccess, onGpsError, {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 5000
+        });
+
+        watchPosId = navigator.geolocation.watchPosition(onGpsSuccess, onGpsError, {
+            enableHighAccuracy: true,
+            timeout: 30000,
+            maximumAge: 5000
+        });
+
+        isBroadcastingGps = true;
+        btnDriverGpsToggle.textContent = "전송 중지";
+        btnDriverGpsToggle.style.background = "var(--metro-red)";
+        driverGpsText.textContent = "연결 중..";
+        showToast("실시간 GPS 위치 전송을 시작합니다.");
+    }
+
+    function stopGps() {
+        if (watchPosId) navigator.geolocation.clearWatch(watchPosId);
+        update(ref(db, 'shuttle_v2/live'), { active: false });
+        isBroadcastingGps = false;
+        driverGpsDot.classList.remove('active');
+        driverGpsText.textContent = "GPS 대기";
+        btnDriverGpsToggle.textContent = "위치 전송 시작";
+        btnDriverGpsToggle.style.background = "var(--metro-blue)";
+        showToast("GPS 위치 전송을 중지했습니다.");
+    }
+
+    btnDriverGpsToggle.addEventListener('click', () => {
+        if (!isBroadcastingGps) {
+            startGps();
+        } else {
+            stopGps();
+        }
+    });
+
+    // 🕹️ 테스트 시뮬레이션 및 리셋 버튼
     document.getElementById('btn-simulate-arrive').addEventListener('click', async () => {
         const sortedStops = Object.values(stopsData).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         if (sortedStops.length === 0) return;
@@ -664,7 +730,6 @@
             updatedAt: Date.now()
         });
 
-        // 해당 정차지에 배정된 원생이 있으면 개별 탑승 확인 모달 트리거
         const targetStudents = Object.values(usersData).filter(u => u.stopId === targetStop.id);
         if (targetStudents.length > 0) {
             openIndividualConfirmModal(targetStudents[0].id, targetStudents[0].childName);
@@ -698,7 +763,7 @@
         };
     };
 
-    // 🗺️ 지도 보기 및 플로팅 카드 컨트롤
+    // 🗺️ 지도 보기 & 플로팅 카드
     document.getElementById('btn-open-map-view').addEventListener('click', () => {
         document.getElementById('map-view-modal').style.display = 'flex';
         initFullRouteMap();
@@ -812,7 +877,7 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // 👤 로그인 및 진입 핸들러
+    // 👤 모드 전환 및 로그인
     document.getElementById('btn-switch-mode').addEventListener('click', () => {
         document.getElementById('login-modal').style.display = 'flex';
     });
@@ -867,7 +932,6 @@
     document.getElementById('btn-msg-change').addEventListener('click', () => sendUserQuickRequest('CHANGE_LOC'));
     document.getElementById('btn-msg-self').addEventListener('click', () => sendUserQuickRequest('SELF_PICKUP'));
 
-    // 초기 샘플 데이터 세팅
     async function seedDemoData() {
         const defaultStops = [
             { name: "망원역 6호선 (출발)", time: "14:00", lat: 37.5559, lng: 126.9105 },
