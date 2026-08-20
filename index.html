@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>셔틀메이트 - 유아 체육 실시간 셔틀 매니저</title>
 
-    <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
+    <!-- 📱 PWA 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="셔틀메이트">
@@ -33,6 +33,7 @@
             --danger: #B5534A;
             --success: #2E8B57;
             --bus-yellow: #F4C430;
+            --landmark-mint: #2EBF91;
             --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -141,7 +142,25 @@
             color: #fff !important;
         }
 
-        /* 공통 바텀 패널 (운전자/학부모) */
+        /* 🎠 랜드마크 마커 */
+        .landmark-marker {
+            background: rgba(30, 35, 40, 0.92);
+            color: var(--landmark-mint);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 9px;
+            border: 1.2px solid var(--landmark-mint);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* 공통 바텀 패널 */
         .bottom-panel {
             position: absolute;
             left: 12px;
@@ -196,7 +215,6 @@
             transition: 0.15s;
         }
         .stop-card.active { border-color: var(--bus-yellow); background: #2f373e; }
-        .stop-card.completed { opacity: 0.55; }
         .stop-top-row { display: flex; justify-content: space-between; align-items: center; }
         .stop-name { font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 5px; }
         .stop-time { font-size: 11px; font-weight: 700; color: var(--c-camel); }
@@ -214,7 +232,6 @@
         }
         .student-chip.alert-delay { border-color: var(--c-camel); color: var(--c-camel); background: rgba(156,121,68,0.15); animation: pulse-alert 1.5s infinite; }
         .student-chip.alert-absent { border-color: var(--danger); color: var(--danger); text-decoration: line-through; opacity: 0.7; }
-        .student-chip.alert-changed { border-color: var(--c-blue); color: #72b7f5; background: rgba(19,97,156,0.15); }
         @keyframes pulse-alert { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
         .driver-stop-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
@@ -267,7 +284,7 @@
         .parent-memo-input { flex: 1; font-size: 11px; padding: 6px 8px; }
         .parent-memo-send-btn { background: var(--c-blue); color: #fff; border: 1px solid var(--c-blue); padding: 6px 12px; font-size: 11px; white-space: nowrap; }
 
-        /* 🏢 원장/관리자 모드 모달 */
+        /* 🏢 관리자 모달 */
         #admin-modal, #login-modal {
             position: fixed;
             inset: 0;
@@ -295,6 +312,11 @@
         .modal-title { font-size: 13px; font-weight: 800; }
         .modal-close-btn { background: none; border: none; font-size: 14px; color: var(--text-sub); }
         .modal-body { padding: 12px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+
+        /* 탭 버튼 */
+        .admin-tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--c-earth); padding-bottom: 6px; }
+        .admin-tab-btn { flex: 1; padding: 5px; font-size: 11px; background: var(--input-bg); color: var(--text-sub); border: 1px solid var(--c-earth); border-radius: 4px; }
+        .admin-tab-btn.active { background: var(--c-camel); color: #fff; border-color: var(--c-camel); font-weight: 800; }
 
         /* 토스트 */
         #toast {
@@ -330,6 +352,7 @@
         <span class="nav-role-badge" id="current-role-badge">역할 선택 필요</span>
     </div>
     <div class="nav-actions">
+        <button type="button" class="nav-btn" id="re-center-btn" title="루트 전체보기">🎯 전체약도</button>
         <button type="button" class="nav-btn" id="switch-role-btn">모드 변경</button>
     </div>
 </div>
@@ -395,19 +418,40 @@
 <div id="admin-modal" style="display:none;">
     <div class="modal-box">
         <div class="modal-header">
-            <span class="modal-title">🏢 노선 및 정차지 관리 (원장 모드)</span>
+            <span class="modal-title">🏢 노선 & 약도 랜드마크 관리</span>
             <button type="button" class="modal-close-btn" id="admin-modal-close-btn">✕</button>
         </div>
         <div class="modal-body">
-            <div style="font-size:11px; font-weight:800; color:var(--c-camel);">+ 새 정차지 검색 및 추가</div>
-            <div style="display:flex; gap:4px;">
-                <input type="text" id="admin-search-input" placeholder="정차지 이름/주소 (예: 래미안 101동 앞)" style="flex:1;" />
-                <button type="button" id="admin-search-btn" style="background:var(--c-blue); color:#fff; border:none; padding:6px 10px; font-size:11px; border-radius:6px;">검색</button>
+            <div class="admin-tab-bar">
+                <button type="button" class="admin-tab-btn active" id="tab-stops-btn">🚩 정차지(A~E) 관리</button>
+                <button type="button" class="admin-tab-btn" id="tab-landmarks-btn">🎠 약도 랜드마크 추가</button>
             </div>
-            <div id="admin-search-results" style="display:flex; flex-direction:column; gap:4px;"></div>
 
-            <div style="font-size:11px; font-weight:800; color:var(--c-camel); margin-top:6px;">📍 현재 등록된 정차지 순서</div>
-            <div id="admin-stops-list" style="display:flex; flex-direction:column; gap:4px;"></div>
+            <!-- 1) 정차지 관리 탭 -->
+            <div id="admin-stops-tab-content">
+                <div style="font-size:11px; font-weight:800; color:var(--c-camel);">+ 새 정차지 검색 및 추가</div>
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <input type="text" id="admin-search-input" placeholder="정차지 이름/주소 (예: 래미안 101동 앞)" style="flex:1;" />
+                    <button type="button" id="admin-search-btn" style="background:var(--c-blue); color:#fff; border:none; padding:6px 10px; font-size:11px; border-radius:6px;">검색</button>
+                </div>
+                <div id="admin-search-results" style="display:flex; flex-direction:column; gap:4px; margin-top:4px;"></div>
+
+                <div style="font-size:11px; font-weight:800; color:var(--c-camel); margin-top:10px;">📍 현재 정차지 순서</div>
+                <div id="admin-stops-list" style="display:flex; flex-direction:column; gap:4px; margin-top:4px;"></div>
+            </div>
+
+            <!-- 2) 랜드마크 관리 탭 -->
+            <div id="admin-landmarks-tab-content" style="display:none;">
+                <div style="font-size:11px; font-weight:800; color:var(--landmark-mint);">+ 경로 랜드마크(약도용) 검색</div>
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <input type="text" id="landmark-search-input" placeholder="랜드마크 (예: 망원어린이공원, 성산파출소)" style="flex:1;" />
+                    <button type="button" id="landmark-search-btn" style="background:var(--landmark-mint); color:#111; border:none; padding:6px 10px; font-size:11px; border-radius:6px; font-weight:800;">검색</button>
+                </div>
+                <div id="landmark-search-results" style="display:flex; flex-direction:column; gap:4px; margin-top:4px;"></div>
+
+                <div style="font-size:11px; font-weight:800; color:var(--landmark-mint); margin-top:10px;">🎠 등록된 약도 랜드마크 목록</div>
+                <div id="admin-landmarks-list" style="display:flex; flex-direction:column; gap:4px; margin-top:4px;"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -421,10 +465,10 @@
         <div class="modal-body">
             <div style="display:flex; flex-direction:column; gap:8px;">
                 <button type="button" id="select-driver-btn" style="padding:12px; background:var(--c-blue); border:none; border-radius:8px; color:#fff; font-size:13px; font-weight:800;">🚗 운전자 / 인솔교사 모드</button>
-                <button type="button" id="select-admin-btn" style="padding:12px; background:var(--c-charcoal); border:1px solid var(--c-earth); border-radius:8px; color:var(--text-main); font-size:13px; font-weight:800;">🏢 원장 / 관리자 모드</button>
+                <button type="button" id="select-admin-btn" style="padding:12px; background:var(--c-charcoal); border:1px solid var(--c-earth); border-radius:8px; color:var(--text-main); font-size:13px; font-weight:800;">🏢 원장 / 관리자 모드 (자유 지도)</button>
                 
                 <div style="border-top:1px dashed var(--c-earth); margin:4px 0;"></div>
-                <div style="font-size:11px; font-weight:800; color:var(--c-camel);">👨‍👩‍👧 학부모 간편 로그인</div>
+                <div style="font-size:11px; font-weight:800; color:var(--c-camel);">👨‍👩‍👧 학부모 간편 로그인 (약도 모드)</div>
                 <input type="text" id="parent-login-child" placeholder="원생 이름 (예: 김민준)" />
                 <input type="password" id="parent-login-pin" placeholder="보안 PIN (4자리: 1234)" maxlength="4" inputmode="numeric" />
                 <button type="button" id="select-parent-btn" style="padding:10px; background:var(--c-camel); border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:800;">학부모로 접속하기</button>
@@ -460,7 +504,9 @@
 
     let busMarker = null;
     let stopMarkers = {};
+    let landmarkMarkers = {};
     let stopsCache = {};
+    let landmarksCache = {};
     let studentsCache = {};
     let requestsCache = {};
 
@@ -500,9 +546,55 @@
         if (map) return;
         map = new naver.maps.Map('map', {
             center: new naver.maps.LatLng(37.5559, 126.9015),
-            zoom: 14
+            zoom: 14,
+            zoomControl: false,
+            mapDataControl: false
         });
     }
+
+    // 🔒 권한에 따른 지도 조작 잠금 / 해제 로직
+    function applyMapPermissions(role) {
+        if (!map) return;
+        if (role === 'admin') {
+            // 관리자: 자유로운 패닝 및 줌인/아웃 허용
+            map.setOptions({
+                draggable: true,
+                pinchZoom: true,
+                scrollWheel: true,
+                keyboardShortcuts: true,
+                disableDoubleTapZoom: false
+            });
+        } else {
+            // 학부모 및 운전자: 약도 모드 고정 (불필요한 패닝 및 줌 조작 완전 차단)
+            map.setOptions({
+                draggable: false,
+                pinchZoom: false,
+                scrollWheel: false,
+                keyboardShortcuts: false,
+                disableDoubleTapZoom: true
+            });
+            fitRouteBounds();
+        }
+    }
+
+    // 🎯 전체 노선 영역으로 지도 자동 포커싱 (Fit Bounds)
+    function fitRouteBounds() {
+        if (!map) return;
+        const stops = Object.values(stopsCache);
+        if (stops.length === 0) return;
+
+        const bounds = new naver.maps.LatLngBounds();
+        stops.forEach(s => bounds.extend(new naver.maps.LatLng(s.lat, s.lng)));
+
+        map.fitBounds(bounds, {
+            top: 70,
+            right: 30,
+            bottom: 240,
+            left: 30
+        });
+    }
+
+    document.getElementById('re-center-btn').addEventListener('click', fitRouteBounds);
 
     function updateShuttleMarker(lat, lng, statusText = '운행중') {
         const pos = new naver.maps.LatLng(lat, lng);
@@ -534,7 +626,6 @@
         }
     }
 
-    // 🧭 방위각(Bearing) 계산 함수
     function calculateBearing(lat1, lng1, lat2, lng2) {
         const lat1Rad = lat1 * Math.PI / 180;
         const lat2Rad = lat2 * Math.PI / 180;
@@ -559,7 +650,6 @@
 
         const pathCoordinates = stops.map(s => new naver.maps.LatLng(s.lat, s.lng));
 
-        // 1) 순서대로 잇는 노선 폴리라인 (골드 옐로우)
         routePolyline = new naver.maps.Polyline({
             map: map,
             path: pathCoordinates,
@@ -571,7 +661,6 @@
             strokeLineJoin: 'round'
         });
 
-        // 2) 각 구간(A➔B, B➔C...)의 중간 지점에 회전 화살표 마커 배치
         for (let i = 0; i < stops.length - 1; i++) {
             const p1 = stops[i];
             const p2 = stops[i + 1];
@@ -624,6 +713,30 @@
         });
 
         renderRoutePath();
+        if (currentRole !== 'admin') fitRouteBounds();
+    }
+
+    // 🎠 랜드마크 마커 동기화 (약도화 핵심)
+    function renderLandmarkMarkers() {
+        Object.values(landmarkMarkers).forEach(m => m.setMap(null));
+        landmarkMarkers = {};
+
+        Object.values(landmarksCache).forEach(lm => {
+            const marker = new naver.maps.Marker({
+                position: new naver.maps.LatLng(lm.lat, lm.lng),
+                map: map,
+                icon: {
+                    content: `
+                        <div class="landmark-marker">
+                            <span>${lm.icon || '🎠'}</span>
+                            <span>${escapeHtml(lm.name)}</span>
+                        </div>
+                    `,
+                    anchor: new naver.maps.Point(0, 0)
+                }
+            });
+            landmarkMarkers[lm.id] = marker;
+        });
     }
 
     function setupFirebaseSync() {
@@ -633,6 +746,12 @@
             if (currentRole === 'driver') renderDriverTimeline();
             if (currentRole === 'admin') renderAdminStops();
             if (currentRole === 'parent') updateParentView();
+        });
+
+        onValue(ref(db, 'shuttle_app/landmarks'), (snap) => {
+            landmarksCache = snap.val() || {};
+            renderLandmarkMarkers();
+            if (currentRole === 'admin') renderAdminLandmarks();
         });
 
         onValue(ref(db, 'shuttle_app/students'), (snap) => {
@@ -695,9 +814,6 @@
                 } else if (req.status === 'delay5') {
                     chipClass = 'alert-delay';
                     statusBadge = '(+5분 지연)';
-                } else if (req.status === 'changed_stop') {
-                    chipClass = 'alert-changed';
-                    statusBadge = `(➔ ${req.targetStopName} 탑승)`;
                 }
 
                 studentChipsHtml += `
@@ -765,7 +881,6 @@
                         active: true,
                         updatedAt: Date.now()
                     });
-                    if (map) map.setCenter(new naver.maps.LatLng(lat, lng));
                 },
                 (err) => {
                     console.warn("GPS Error:", err);
@@ -834,6 +949,28 @@
         showToast("기사님께 메시지가 전달되었습니다.");
     });
 
+    // 🏢 관리자 모드: 탭 전환 (정차지 vs 랜드마크)
+    const tabStopsBtn = document.getElementById('tab-stops-btn');
+    const tabLandmarksBtn = document.getElementById('tab-landmarks-btn');
+    const stopsTabContent = document.getElementById('admin-stops-tab-content');
+    const landmarksTabContent = document.getElementById('admin-landmarks-tab-content');
+
+    tabStopsBtn.addEventListener('click', () => {
+        tabStopsBtn.classList.add('active');
+        tabLandmarksBtn.classList.remove('active');
+        stopsTabContent.style.display = 'block';
+        landmarksTabContent.style.display = 'none';
+    });
+
+    tabLandmarksBtn.addEventListener('click', () => {
+        tabLandmarksBtn.classList.add('active');
+        tabStopsBtn.classList.remove('active');
+        landmarksTabContent.style.display = 'block';
+        stopsTabContent.style.display = 'none';
+        renderAdminLandmarks();
+    });
+
+    // 1) 정차지 검색 및 추가
     const adminSearchInput = document.getElementById('admin-search-input');
     const adminSearchBtn = document.getElementById('admin-search-btn');
     const adminSearchResults = document.getElementById('admin-search-results');
@@ -914,6 +1051,89 @@
         });
     }
 
+    // 2) 랜드마크 검색 및 추가
+    const landmarkSearchInput = document.getElementById('landmark-search-input');
+    const landmarkSearchBtn = document.getElementById('landmark-search-btn');
+    const landmarkSearchResults = document.getElementById('landmark-search-results');
+    const adminLandmarksList = document.getElementById('admin-landmarks-list');
+
+    landmarkSearchBtn.addEventListener('click', async () => {
+        const query = landmarkSearchInput.value.trim();
+        if (!query) return;
+        landmarkSearchBtn.textContent = '검색중..';
+
+        try {
+            const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`, {
+                headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
+            });
+            const data = await res.json();
+            renderLandmarkSearchResults(data.documents || []);
+        } catch(e) {
+            showToast("검색 실패");
+        } finally {
+            landmarkSearchBtn.textContent = '검색';
+        }
+    });
+
+    function renderLandmarkSearchResults(items) {
+        landmarkSearchResults.innerHTML = '';
+        if (items.length === 0) {
+            landmarkSearchResults.innerHTML = '<div style="font-size:10px; color:var(--text-sub);">검색 결과가 없습니다.</div>';
+            return;
+        }
+        items.slice(0, 3).forEach(item => {
+            const div = document.createElement('div');
+            div.style.cssText = "background:var(--input-bg); padding:6px 8px; border-radius:6px; border:1px solid var(--c-earth); display:flex; justify-content:space-between; align-items:center;";
+            div.innerHTML = `
+                <div style="overflow:hidden; flex:1;">
+                    <div style="font-size:11px; font-weight:800; color:var(--text-main);">${escapeHtml(item.place_name)}</div>
+                    <div style="font-size:9px; color:var(--text-sub);">${escapeHtml(item.road_address_name || item.address_name)}</div>
+                </div>
+                <button type="button" style="background:var(--landmark-mint); color:#111; border:none; padding:4px 8px; font-size:10px; border-radius:4px; font-weight:800;">+ 랜드마크</button>
+            `;
+            div.querySelector('button').addEventListener('click', async () => {
+                const iconPrompt = prompt(`[${item.place_name}] 아이콘 이모지 (예: 🎠, 🌲, 👮, 💊, 🏪)`, "🎠");
+                const newRef = push(ref(db, 'shuttle_app/landmarks'));
+                await set(newRef, {
+                    id: newRef.key,
+                    name: item.place_name,
+                    icon: iconPrompt || '🎠',
+                    lat: parseFloat(item.y),
+                    lng: parseFloat(item.x)
+                });
+                landmarkSearchInput.value = '';
+                landmarkSearchResults.innerHTML = '';
+                showToast("약도 랜드마크가 등록되었습니다.");
+            });
+            landmarkSearchResults.appendChild(div);
+        });
+    }
+
+    function renderAdminLandmarks() {
+        adminLandmarksList.innerHTML = '';
+        const landmarks = Object.values(landmarksCache);
+        if (landmarks.length === 0) {
+            adminLandmarksList.innerHTML = '<div style="font-size:10px; color:var(--text-sub);">등록된 랜드마크가 없습니다.</div>';
+            return;
+        }
+        landmarks.forEach(lm => {
+            const row = document.createElement('div');
+            row.style.cssText = "background:var(--card-surface); padding:6px 8px; border-radius:6px; border:1px solid var(--c-earth); display:flex; justify-content:space-between; align-items:center;";
+            row.innerHTML = `
+                <span style="font-size:11px; font-weight:800;">${lm.icon || '🎠'} ${escapeHtml(lm.name)}</span>
+                <button type="button" style="background:transparent; border:1px solid var(--danger); color:var(--danger); font-size:9px; padding:2px 5px; border-radius:3px;">삭제</button>
+            `;
+            row.querySelector('button').addEventListener('click', async () => {
+                if (confirm(`'${lm.name}' 랜드마크를 삭제하시겠습니까?`)) {
+                    await remove(ref(db, `shuttle_app/landmarks/${lm.id}`));
+                    showToast("랜드마크가 삭제되었습니다.");
+                }
+            });
+            adminLandmarksList.appendChild(row);
+        });
+    }
+
+    // 🔑 모드 전환 로직
     const loginModal = document.getElementById('login-modal');
     const adminModal = document.getElementById('admin-modal');
     const driverPanel = document.getElementById('driver-panel');
@@ -931,8 +1151,9 @@
         parentPanel.style.display = 'none';
         adminModal.style.display = 'none';
         loginModal.style.display = 'none';
+        applyMapPermissions('driver');
         renderDriverTimeline();
-        showToast("운전자 모드로 접속했습니다.");
+        showToast("운전자 모드로 접속했습니다. (약도 고정)");
     });
 
     document.getElementById('select-admin-btn').addEventListener('click', () => {
@@ -942,7 +1163,9 @@
         parentPanel.style.display = 'none';
         loginModal.style.display = 'none';
         adminModal.style.display = 'flex';
+        applyMapPermissions('admin');
         renderAdminStops();
+        showToast("관리자 모드: 지도 자유 조작 활성화");
     });
 
     document.getElementById('admin-modal-close-btn').addEventListener('click', () => {
@@ -975,10 +1198,12 @@
         driverPanel.style.display = 'none';
         adminModal.style.display = 'none';
         loginModal.style.display = 'none';
+        applyMapPermissions('parent');
         updateParentView();
-        showToast(`${currentStudent.name} 학부모 모드로 접속했습니다.`);
+        showToast(`${currentStudent.name} 학부모 모드: 약도 고정 완료`);
     });
 
+    // 🌟 샘플 데이터 (정차지 6곳 + 약도용 랜드마크 3곳 자동 세팅)
     async function seedInitialDemoData() {
         const snap = await get(ref(db, 'shuttle_app/routes'));
         if (!snap.exists()) {
@@ -996,6 +1221,16 @@
                 const newRef = push(ref(db, 'shuttle_app/routes'));
                 await set(newRef, { id: newRef.key, ...s });
                 stopIds.push(newRef.key);
+            }
+
+            const sampleLandmarks = [
+                { name: "성산성당 앞", icon: "⛪", lat: 37.5582, lng: 126.9110 },
+                { name: "망원어린이놀이터", icon: "🎠", lat: 37.5570, lng: 126.9030 },
+                { name: "망원2동주민센터", icon: "🏢", lat: 37.5615, lng: 126.9040 }
+            ];
+            for (const lm of sampleLandmarks) {
+                const lmRef = push(ref(db, 'shuttle_app/landmarks'));
+                await set(lmRef, { id: lmRef.key, ...lm });
             }
 
             const sampleStudents = [
