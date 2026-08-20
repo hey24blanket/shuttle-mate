@@ -3,49 +3,43 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>셔틀메이트 - 실시간 셔틀 관제 매니저</title>
+    <title>셔틀메이트 - 유아 체육 실시간 셔틀 매니저</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="셔틀메이트">
 
-    <!-- 지도 및 검색 SDK -->
+    <!-- 지도 및 검색 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a085e86caab74f58d6778d77eeb99870&libraries=services"></script>
 
     <style>
         :root {
-            --bg-offwhite: #F7F6F3;
+            --bg-canvas: #EAE6E1;
             --surface-white: #FFFFFF;
-            --border-line: #E2DED6;
-            --border-dark: #202428;
-            --text-primary: #1E2328;
-            --text-secondary: #7E7870;
-            --text-muted: #A8A196;
+            --border-line: #DDD8D0;
+            --text-dark: #2C2825;
+            --text-sub: #7D766E;
             
-            --bus-green: #2E8B57;
-            --accent-amber: #E89B35;
-            --accent-blue: #3A86FF;
-            --alert-coral: #E65C53;
-            --badge-bg: #EFECE6;
+            --metro-blue: #0E7CB9;
+            --metro-orange: #DF8706;
+            --metro-red: #D9483B;
+            --metro-green: #2B8A57;
 
-            --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden; background-color: var(--bg-offwhite); color: var(--text-primary); font-family: var(--font-family); }
+        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden; background-color: var(--bg-canvas); color: var(--text-dark); font-family: var(--font-main); }
         
-        input, button, select, textarea { font-family: var(--font-family); border: 1px solid var(--border-line); background: var(--surface-white); color: var(--text-primary); border-radius: 8px; padding: 10px 12px; font-size: 13px; outline: none; touch-action: manipulation; }
-        input:focus { border-color: var(--border-dark); }
-        button { cursor: pointer; font-weight: 700; transition: transform 0.1s, opacity 0.1s; user-select: none; }
-        button:active { transform: scale(0.98); opacity: 0.85; }
+        input, button, select { font-family: var(--font-main); border: 1px solid var(--border-line); background: var(--surface-white); color: var(--text-dark); border-radius: 8px; padding: 9px 12px; font-size: 13px; outline: none; }
+        button { cursor: pointer; font-weight: 700; user-select: none; }
+        button:active { opacity: 0.85; }
 
-        /* 상단 공통 바 */
+        /* 상단 공통 네비바 */
         .app-header {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 52px;
             padding: 0 16px;
             background: var(--surface-white);
@@ -55,43 +49,165 @@
             align-items: center;
             z-index: 100;
         }
-        .header-brand {
-            font-size: 15px;
-            font-weight: 900;
+        .header-brand { font-size: 15px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
+        .header-badge { font-size: 10px; padding: 2px 7px; background: #ECE7E1; border-radius: 4px; color: var(--text-sub); font-weight: 800; }
+        .header-actions { display: flex; gap: 6px; }
+        .btn-header { padding: 6px 10px; font-size: 11px; border: 1px solid var(--border-line); background: #F5F2EC; border-radius: 6px; }
+
+        /* 🚗 운전자 화면 (첨부 1 디자인 반영 메트로 노선도) */
+        #driver-view-container {
+            position: absolute;
+            top: 52px; left: 0; right: 0; bottom: 0;
+            display: none;
+            flex-direction: column;
+            background: var(--bg-canvas);
+        }
+        .driver-sub-bar {
+            padding: 10px 16px;
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .gps-status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; }
+        .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--metro-red); }
+        .gps-dot.active { background: var(--metro-green); box-shadow: 0 0 6px var(--metro-green); }
+
+        .driver-action-buttons { display: flex; gap: 6px; }
+        .btn-test-action { padding: 6px 10px; font-size: 11px; border-radius: 6px; border: none; color: #fff; font-weight: 800; }
+
+        /* 메트로 노선 뷰 (스크롤/드래그 지원) */
+        .metro-scroll-container {
+            flex: 1;
+            padding: 24px 20px 80px 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            touch-action: pan-y;
+        }
+        .metro-track-item {
+            display: flex;
+            position: relative;
+            min-height: 80px;
+        }
+        /* 세로 기둥 선 */
+        .metro-track-item::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 24px;
+            bottom: -2px;
+            width: 8px;
+            background: var(--metro-orange);
+            border-radius: 4px;
+            z-index: 1;
+        }
+        .metro-track-item.passed::before {
+            background: var(--metro-blue);
+        }
+        .metro-track-item:last-child::before {
+            display: none;
+        }
+
+        /* 원형 노드 아이콘 */
+        .metro-node {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--metro-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            flex-shrink: 0;
+            border: 4px solid var(--bg-canvas);
+            box-shadow: 0 0 0 2px var(--metro-orange);
+        }
+        .metro-track-item.passed .metro-node {
+            background: var(--metro-blue);
+            box-shadow: 0 0 0 2px var(--metro-blue);
+        }
+        .metro-node-inner {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        /* 우측 텍스트 및 원생 정보 */
+        .metro-content {
+            margin-left: 16px;
+            flex: 1;
+            padding-bottom: 20px;
+        }
+        .metro-stop-title-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .metro-stop-num { font-size: 17px; font-weight: 900; color: var(--text-dark); }
+        .metro-stop-name { font-size: 15px; font-weight: 800; color: var(--text-dark); }
+        .metro-stop-time { font-size: 13px; font-weight: 700; color: var(--text-sub); }
+
+        .metro-passengers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .metro-passenger-chip {
+            background: var(--surface-white);
+            border: 1px solid var(--border-line);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
             display: flex;
             align-items: center;
             gap: 6px;
-            color: var(--text-primary);
         }
-        .header-badge {
-            font-size: 10px;
-            padding: 2px 7px;
-            background: var(--badge-bg);
-            border-radius: 4px;
-            color: var(--text-secondary);
-            font-weight: 800;
+        .metro-passenger-chip.alert {
+            border-color: var(--metro-red);
+            background: #FDF1F0;
+            color: var(--metro-red);
         }
-        .header-actions { display: flex; gap: 8px; }
-        .mode-switch-btn { padding: 6px 10px; font-size: 11px; border: 1px solid var(--border-line); background: var(--bg-offwhite); border-radius: 6px; }
+        .metro-passenger-chip.boarded {
+            border-color: var(--metro-green);
+            background: #EFF8F3;
+            color: var(--metro-green);
+        }
 
-        /* 📱 1. 학부모(사용자) 화면 - 3단 분할 레이아웃 */
+        /* 하단 플로팅 버튼 */
+        .driver-floating-map-btn {
+            position: absolute;
+            right: 18px;
+            bottom: 20px;
+            padding: 13px 20px;
+            background: var(--text-dark);
+            color: #fff;
+            border-radius: 30px;
+            border: none;
+            font-size: 13px;
+            font-weight: 900;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 50;
+        }
+
+        /* 📱 2. 학부모(사용자) 화면 (3단 분할) */
         #user-view-container {
             position: absolute;
-            top: 52px;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 52px; left: 0; right: 0; bottom: 0;
             display: none;
             flex-direction: column;
-            background: var(--bg-offwhite);
+            background: var(--bg-canvas);
         }
-        .user-section-top {
-            flex: 1.1;
-            position: relative;
-            background: #E8E5DF;
-            border-bottom: 1px solid var(--border-line);
-            overflow: hidden;
-        }
+        .user-section-top { flex: 1.1; position: relative; background: #E0DDD7; border-bottom: 1px solid var(--border-line); }
         #user-radar-map { width: 100%; height: 100%; }
 
         .user-section-mid {
@@ -102,31 +218,20 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
         }
-        .eta-headline {
-            font-size: 16px;
-            font-weight: 900;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .eta-time-highlight { color: var(--accent-blue); font-size: 20px; font-weight: 900; }
-        .progress-track-wrapper { position: relative; width: 100%; padding: 18px 0 10px; }
-        .progress-track-line { width: 100%; height: 6px; background: #EFECE6; border-radius: 3px; position: relative; }
-        .progress-fill-line { position: absolute; left: 0; top: 0; height: 100%; background: var(--bus-green); border-radius: 3px; width: 0%; transition: width 0.4s ease; }
-        .progress-bus-icon { position: absolute; top: -14px; transform: translateX(-50%); font-size: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); transition: left 0.4s ease; }
-        .progress-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: var(--text-secondary); margin-top: 6px; }
+        .progress-track-wrapper { position: relative; width: 100%; padding: 14px 0 6px; }
+        .progress-track-line { width: 100%; height: 6px; background: #EBE7E1; border-radius: 3px; position: relative; }
+        .progress-fill-line { position: absolute; left: 0; top: 0; height: 100%; background: var(--metro-green); border-radius: 3px; width: 0%; transition: width 0.3s; }
+        .progress-bus-icon { position: absolute; top: -14px; transform: translateX(-50%); font-size: 18px; transition: left 0.3s; }
 
         .user-section-bottom {
-            flex: 1.3;
+            flex: 1.2;
             padding: 16px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            background: var(--bg-offwhite);
-            overflow-y: auto;
+            background: var(--bg-canvas);
         }
         .user-info-card {
             background: var(--surface-white);
@@ -137,147 +242,55 @@
             grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
-        .info-item { display: flex; flex-direction: column; gap: 2px; }
-        .info-label { font-size: 10px; font-weight: 700; color: var(--text-muted); }
-        .info-val { font-size: 12.5px; font-weight: 800; color: var(--text-primary); }
+        .quick-message-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .btn-quick-msg { padding: 12px 6px; background: var(--surface-white); border: 1px solid var(--border-line); border-radius: 10px; font-size: 11px; font-weight: 800; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .btn-quick-msg.active { background: var(--metro-red); border-color: var(--metro-red); color: #fff; }
 
-        .quick-message-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn-quick-msg {
-            padding: 12px 6px;
-            background: var(--surface-white);
-            border: 1px solid var(--border-line);
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 800;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: var(--text-primary);
-        }
-        .btn-quick-msg.active { background: var(--alert-coral); border-color: var(--alert-coral); color: #fff; }
-
-        /* 🚗 2. 운전자 화면 - 메트로 타임라인 레이아웃 */
-        #driver-view-container {
-            position: absolute;
-            top: 52px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: none;
-            flex-direction: column;
-            background: var(--bg-offwhite);
-        }
-        .driver-top-control {
-            padding: 12px 16px;
-            background: var(--surface-white);
-            border-bottom: 1px solid var(--border-line);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .gps-status-pill {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        .gps-dot-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--alert-coral); }
-        .gps-dot-indicator.active { background: var(--bus-green); box-shadow: 0 0 6px var(--bus-green); }
-        .btn-gps-toggle { padding: 8px 14px; font-size: 12px; border-radius: 8px; border: none; background: var(--accent-blue); color: #fff; }
-
-        .driver-timeline-scroll {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .metro-stop-card {
-            background: var(--surface-white);
-            border: 1px solid var(--border-line);
-            border-radius: 14px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: relative;
-        }
-        .metro-stop-card.current { border: 2px solid var(--accent-amber); }
-        .stop-header-row { display: flex; justify-content: space-between; align-items: center; }
-        .stop-order-tag {
-            background: var(--border-dark);
-            color: #fff;
-            padding: 2px 7px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 900;
-        }
-        .stop-time-tag { font-size: 13px; font-weight: 800; color: var(--accent-amber); }
-        .stop-name-title { font-size: 14px; font-weight: 900; margin-top: 2px; }
-
-        .student-passenger-list { display: flex; flex-direction: column; gap: 6px; }
-        .passenger-item-row {
-            background: var(--bg-offwhite);
-            border: 1px solid var(--border-line);
-            border-radius: 8px;
-            padding: 8px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .passenger-name { font-size: 12px; font-weight: 800; }
-        .passenger-alert-tag { font-size: 10px; font-weight: 800; color: var(--alert-coral); background: #FDE8E7; padding: 2px 6px; border-radius: 4px; }
-        .passenger-boarded-tag { font-size: 10px; font-weight: 800; color: var(--bus-green); background: #E7F4ED; padding: 2px 6px; border-radius: 4px; }
-        
-        .btn-individual-pickup { padding: 4px 8px; font-size: 11px; border: 1px solid var(--border-line); background: var(--surface-white); border-radius: 6px; }
-
-        .driver-floating-add-btn {
-            position: absolute;
-            right: 18px;
-            bottom: 20px;
-            padding: 12px 18px;
-            background: var(--border-dark);
-            color: #fff;
-            border-radius: 30px;
-            border: none;
-            font-size: 13px;
-            font-weight: 900;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 50;
-        }
-
-        /* 📍 3. 픽업 위치 검색 & 롱터치 등록 모달/지도 */
-        #map-picker-modal {
+        /* 🗺️ 3. 지도 보기 & 픽업 등록 모달 */
+        #map-view-modal {
             position: fixed;
             inset: 0;
-            background: var(--bg-offwhite);
             z-index: 500;
             display: none;
             flex-direction: column;
+            background: var(--bg-canvas);
         }
-        .picker-header {
+        .map-view-header {
             padding: 10px 14px;
             background: var(--surface-white);
             border-bottom: 1px solid var(--border-line);
             display: flex;
             gap: 8px;
             align-items: center;
+            z-index: 10;
         }
-        #picker-search-input { flex: 1; }
-        #picker-map-area { flex: 1; position: relative; }
+        #full-route-map { flex: 1; position: relative; }
 
-        /* 모달 공통 */
+        /* 📍 픽업 지정 논블로킹 플로팅 팝업 (배경 지도 조작 가능) */
+        #floating-pickup-card {
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            max-width: 400px;
+            margin: 0 auto;
+            background: var(--surface-white);
+            border: 1.5px solid var(--text-dark);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            z-index: 600;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* 공통 모달 */
         .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(3px);
             z-index: 1000;
             display: none;
             align-items: center;
@@ -288,63 +301,25 @@
             width: 100%;
             max-width: 340px;
             background: var(--surface-white);
-            border: 1px solid var(--border-line);
             border-radius: 16px;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
-        .modal-card-header { padding: 14px 16px; border-bottom: 1px solid var(--border-line); font-size: 14px; font-weight: 900; }
-        .modal-card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
-        /* 토스트 알림 */
         #toast-banner {
             position: fixed;
-            left: 50%;
-            bottom: 30px;
+            left: 50%; bottom: 30px;
             transform: translateX(-50%) translateY(20px);
-            opacity: 0;
-            pointer-events: none;
+            opacity: 0; pointer-events: none;
             z-index: 5000;
             padding: 10px 18px;
-            background: var(--border-dark);
+            background: var(--text-dark);
             color: #fff;
             border-radius: 30px;
-            font-size: 12px;
-            font-weight: 800;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            font-size: 12px; font-weight: 800;
             transition: 0.25s ease;
         }
         #toast-banner.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        /* 지도 마커 */
-        .radar-bus-dot {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--bus-green);
-            border: 3px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            animation: radar-pulse 1.8s infinite;
-        }
-        @keyframes radar-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(46, 139, 87, 0.6); }
-            70% { box-shadow: 0 0 0 12px rgba(46, 139, 87, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(46, 139, 87, 0); }
-        }
-        .radar-target-flag {
-            background: var(--text-primary);
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 800;
-            border: 1.5px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            transform: translate(-50%, -100%);
-            white-space: nowrap;
-        }
     </style>
 </head>
 <body>
@@ -357,156 +332,125 @@
         <span class="header-badge" id="view-mode-badge">모드 미지정</span>
     </div>
     <div class="header-actions">
-        <button type="button" class="mode-switch-btn" id="btn-switch-mode">모드 변경</button>
+        <button type="button" class="btn-header" id="btn-switch-mode">모드 변경</button>
     </div>
 </header>
 
-<!-- 📱 1. 학부모(사용자) 화면 (3단 분할) -->
+<!-- 🚗 1. 운전자 메트로 노선 화면 -->
+<main id="driver-view-container">
+    <div class="driver-sub-bar">
+        <div class="gps-status">
+            <div class="gps-dot" id="driver-gps-dot"></div>
+            <span id="driver-gps-status-text">GPS 대기</span>
+        </div>
+        <div class="driver-action-buttons">
+            <button type="button" class="btn-test-action" id="btn-driver-gps-toggle" style="background:var(--metro-blue);">GPS 전송</button>
+            <button type="button" class="btn-test-action" id="btn-simulate-arrive" style="background:var(--metro-orange);">📍 다음도착(시뮬)</button>
+            <button type="button" class="btn-test-action" id="btn-reset-data" style="background:var(--text-sub);">🔄 리셋</button>
+        </div>
+    </div>
+
+    <!-- 첨부 1 디자인 반영: 메트로 노선도 리스트 -->
+    <div class="metro-scroll-container" id="metro-stops-container"></div>
+
+    <button type="button" class="driver-floating-map-btn" id="btn-open-map-view">
+        <span>🗺️</span>
+        <span>지도 보기 / 등록</span>
+    </button>
+</main>
+
+<!-- 📱 2. 학부모(사용자) 화면 -->
 <main id="user-view-container">
-    <!-- 상단 1/3: 실시간 레이더 맵 -->
     <div class="user-section-top">
         <div id="user-radar-map"></div>
     </div>
 
-    <!-- 중단 1/3: 스마트 선형 진척도 (배민/우버 뷰) -->
     <div class="user-section-mid">
-        <div class="eta-headline">
+        <div style="font-size:16px; font-weight:900; display:flex; align-items:center; gap:8px;">
             <span>도착까지</span>
-            <span class="eta-time-highlight" id="user-eta-minutes">약 4분</span>
-            <span style="font-size: 13px; font-weight:700; color:var(--text-secondary);" id="user-eta-subtext">남았습니다</span>
+            <span style="color:var(--metro-blue); font-size:20px;" id="user-eta-minutes">약 4분</span>
+            <span style="font-size:13px; color:var(--text-sub);" id="user-eta-subtext">남았습니다</span>
         </div>
         <div class="progress-track-wrapper">
             <div class="progress-track-line">
                 <div class="progress-fill-line" id="user-progress-fill"></div>
                 <div class="progress-bus-icon" id="user-progress-bus-icon" style="left: 0%;">🚐</div>
             </div>
-            <div class="progress-labels">
-                <span id="label-prev-stop" style="color:var(--text-muted);">... 출발지</span>
-                <span id="label-my-stop" style="color:var(--text-primary);">내 픽업지</span>
+            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800; color:var(--text-sub); margin-top:6px;">
+                <span id="label-prev-stop">... 출발지</span>
+                <span id="label-my-stop" style="color:var(--text-dark);">내 픽업지</span>
             </div>
         </div>
     </div>
 
-    <!-- 하단 1/3: 정보 카드 및 3종 원터치 퀵 메시지 -->
     <div class="user-section-bottom">
         <div class="user-info-card">
-            <div class="info-item">
-                <span class="info-label">소속 크루</span>
-                <span class="info-val" id="info-crew-name">화목 유아체육 1반</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">원생 이름</span>
-                <span class="info-val" id="info-child-name">-</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">예정 시간</span>
-                <span class="info-val" id="info-pickup-time">-</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">픽업 장소</span>
-                <span class="info-val" id="info-pickup-loc" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</span>
-            </div>
+            <div><div style="font-size:10px; color:var(--text-sub);">소속 크루</div><div style="font-size:12.5px; font-weight:800;" id="info-crew-name">화목 유아체육 1반</div></div>
+            <div><div style="font-size:10px; color:var(--text-sub);">원생 이름</div><div style="font-size:12.5px; font-weight:800;" id="info-child-name">-</div></div>
+            <div><div style="font-size:10px; color:var(--text-sub);">픽업 시간</div><div style="font-size:12.5px; font-weight:800;" id="info-pickup-time">-</div></div>
+            <div><div style="font-size:10px; color:var(--text-sub);">픽업 장소</div><div style="font-size:12.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="info-pickup-loc">-</div></div>
         </div>
 
         <div>
-            <div style="font-size:11px; font-weight:800; color:var(--text-secondary); margin-bottom:6px;">⚡ 기사님께 바로 알림</div>
+            <div style="font-size:11px; font-weight:800; color:var(--text-sub); margin-bottom:6px;">⚡ 기사님께 바로 알림</div>
             <div class="quick-message-grid">
-                <button type="button" class="btn-quick-msg" id="btn-msg-delay5">
-                    <span>⏳</span>
-                    <span>5분 늦어요</span>
-                </button>
-                <button type="button" class="btn-quick-msg" id="btn-msg-change">
-                    <span>🔄</span>
-                    <span>장소 변경</span>
-                </button>
-                <button type="button" class="btn-quick-msg" id="btn-msg-self">
-                    <span>🚗</span>
-                    <span>직접 데려감</span>
-                </button>
+                <button type="button" class="btn-quick-msg" id="btn-msg-delay5"><span>⏳</span><span>5분 늦어요</span></button>
+                <button type="button" class="btn-quick-msg" id="btn-msg-change"><span>🔄</span><span>장소 변경</span></button>
+                <button type="button" class="btn-quick-msg" id="btn-msg-self"><span>🚗</span><span>직접 데려감</span></button>
             </div>
         </div>
     </div>
 </main>
 
-<!-- 🚗 2. 운전자 화면 (메트로 타임라인) -->
-<main id="driver-view-container">
-    <div class="driver-top-control">
-        <div class="gps-status-pill">
-            <div class="gps-dot-indicator" id="driver-gps-dot"></div>
-            <span id="driver-gps-status-text">GPS 대기</span>
+<!-- 🗺️ 3. 지도 보기 및 픽업 등록 모달 (네이버 경유 길찾기 렌더링) -->
+<div id="map-view-modal">
+    <div class="map-view-header">
+        <input type="text" id="map-search-input" placeholder="정차지 검색 (예: 래미안 101동)" style="flex:1;" />
+        <button type="button" id="btn-map-search" style="background:var(--text-dark); color:#fff; padding:9px 14px;">검색</button>
+        <button type="button" id="btn-close-map-view" style="padding:9px 12px; background:#ECE7E1;">✕ 닫기</button>
+    </div>
+    <div id="full-route-map"></div>
+
+    <!-- 지도가 보이는 상태에서 하단에 플로팅되는 픽업 등록 카드 -->
+    <div id="floating-pickup-card">
+        <div style="font-size:13px; font-weight:900; display:flex; justify-content:space-between;">
+            <span>📍 픽업 위치 및 원생 지정</span>
+            <span style="font-size:11px; color:var(--text-sub); cursor:pointer;" id="btn-close-floating-card">✕</span>
         </div>
-        <button type="button" class="btn-gps-toggle" id="btn-driver-gps-toggle">위치 전송 시작</button>
+        <input type="text" id="input-new-stop-name" placeholder="장소명 (예: 래미안 101동 정문)" />
+        <input type="time" id="input-new-stop-time" value="14:10" />
+        <select id="select-new-stop-student"><option value="">-- 배정 원생 선택 --</option></select>
+        <button type="button" id="btn-save-new-stop" style="background:var(--metro-green); color:#fff; padding:10px; font-weight:800;">저장 및 노선 자동 정렬</button>
     </div>
-
-    <div class="driver-timeline-scroll" id="driver-timeline-container"></div>
-
-    <button type="button" class="driver-floating-add-btn" id="btn-open-map-picker">
-        <span>+</span>
-        <span>픽업 위치 등록</span>
-    </button>
-</main>
-
-<!-- 📍 3. 픽업 위치 검색 & 롱터치 등록 모달/지도 -->
-<div id="map-picker-modal">
-    <div class="picker-header">
-        <input type="text" id="picker-search-input" placeholder="정차지 검색 (예: 래미안 101동)" />
-        <button type="button" id="btn-picker-search" style="padding:10px 14px; background:var(--border-dark); color:#fff;">검색</button>
-        <button type="button" id="btn-picker-close" style="padding:10px 12px; background:var(--bg-offwhite);">✕</button>
-    </div>
-    <div id="picker-map-area"></div>
 </div>
 
-<!-- 👤 4. 로그인 모달 (A안: 원생 이름 + PIN 4자리) -->
+<!-- 👤 로그인 모달 -->
 <div class="modal-overlay" id="login-modal" style="display:flex;">
     <div class="modal-card">
-        <div class="modal-card-header">셔틀메이트 접속</div>
-        <div class="modal-card-body">
-            <button type="button" id="btn-enter-driver" style="padding:12px; background:var(--border-dark); color:#fff; font-size:13px;">🚗 운전자(기사/관리자) 모드</button>
-            
-            <div style="display:flex; align-items:center; gap:8px; margin:4px 0;">
+        <div style="padding:14px 16px; border-bottom:1px solid var(--border-line); font-weight:900;">셔틀메이트 접속</div>
+        <div style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <button type="button" id="btn-enter-driver" style="padding:12px; background:var(--text-dark); color:#fff;">🚗 운전자 모드</button>
+            <div style="display:flex; align-items:center; gap:8px; margin:2px 0;">
                 <div style="flex:1; height:1px; background:var(--border-line);"></div>
-                <span style="font-size:10px; color:var(--text-muted); font-weight:800;">또는 학부모 로그인</span>
+                <span style="font-size:10px; color:var(--text-sub);">또는 학부모 로그인</span>
                 <div style="flex:1; height:1px; background:var(--border-line);"></div>
             </div>
-
             <input type="text" id="login-child-name" placeholder="원생 이름 (예: 김민준)" />
-            <input type="password" id="login-pin" placeholder="보안 PIN 번호 4자리 (예: 1234)" maxlength="4" inputmode="numeric" />
-            <button type="button" id="btn-enter-user" style="padding:12px; background:var(--accent-blue); color:#fff; font-size:13px;">학부모로 접속하기</button>
+            <input type="password" id="login-pin" placeholder="보안 PIN (4자리)" maxlength="4" inputmode="numeric" />
+            <button type="button" id="btn-enter-user" style="padding:12px; background:var(--metro-blue); color:#fff;">학부모로 접속</button>
         </div>
     </div>
 </div>
 
-<!-- 📋 5. 롱터치 픽업 장소 등록 폼 모달 -->
-<div class="modal-overlay" id="add-stop-modal">
-    <div class="modal-card">
-        <div class="modal-card-header">📍 픽업 위치 및 원생 지정</div>
-        <div class="modal-card-body">
-            <div class="info-label">장소 명칭</div>
-            <input type="text" id="new-stop-name" placeholder="장소명 (예: 래미안 101동 정문)" />
-
-            <div class="info-label">픽업 예정 시간</div>
-            <input type="time" id="new-stop-time" value="14:10" />
-
-            <div class="info-label">탑승 원생 배정 (드롭다운 선택)</div>
-            <select id="new-stop-student-select">
-                <option value="">-- 배정할 원생 선택 --</option>
-            </select>
-
-            <button type="button" id="btn-save-new-stop" style="padding:12px; background:var(--bus-green); color:#fff; margin-top:6px;">픽업 위치 저장 및 알림</button>
-            <button type="button" id="btn-cancel-new-stop" style="padding:8px; background:var(--bg-offwhite);">취소</button>
-        </div>
-    </div>
-</div>
-
-<!-- 🔔 6. 개별 탑승 확인 모달 (도착 시 팝업) -->
+<!-- 🔔 개별 탑승 확인 모달 -->
 <div class="modal-overlay" id="pickup-confirm-modal">
     <div class="modal-card">
-        <div class="modal-card-header" id="confirm-modal-title">🔔 탑승 확인</div>
-        <div class="modal-card-body">
-            <div style="font-size:13px; font-weight:800;" id="confirm-modal-desc">원생이 차량에 탑승했습니까?</div>
-            <div style="display:flex; gap:8px; margin-top:8px;">
-                <button type="button" id="btn-confirm-boarded" style="flex:1; padding:12px; background:var(--bus-green); color:#fff;">네, 탑승완료</button>
-                <button type="button" id="btn-confirm-no" style="flex:1; padding:12px; background:var(--bg-offwhite);">아니오(미탑승)</button>
+        <div style="padding:14px 16px; border-bottom:1px solid var(--border-line); font-weight:900;" id="confirm-modal-title">🔔 탑승 확인</div>
+        <div style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <div id="confirm-modal-desc" style="font-size:13px; font-weight:800;">원생이 차량에 탑승했습니까?</div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" id="btn-confirm-boarded" style="flex:1; padding:12px; background:var(--metro-green); color:#fff;">네, 탑승완료</button>
+                <button type="button" id="btn-confirm-no" style="flex:1; padding:12px; background:#ECE7E1;">아니오(미탑승)</button>
             </div>
         </div>
     </div>
@@ -537,13 +481,13 @@
     let currentUser = null;
 
     let userMap = null;
-    let pickerMap = null;
-    let userBusMarker = null;
-    let userStopMarker = null;
+    let fullMap = null;
+    let fullMapPolyline = null;
+    let fullMapArrowMarkers = [];
 
     let stopsData = {};
     let usersData = {};
-    let liveData = {};
+    let liveData = { active: false, currentStopIndex: 0 };
     let tempPickerCoord = null;
 
     let watchPosId = null;
@@ -558,58 +502,274 @@
         toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    // 맵 초기화
     function initUserRadarMap() {
         if (userMap) return;
         userMap = new naver.maps.Map('user-radar-map', {
             center: new naver.maps.LatLng(37.5559, 126.9015),
-            zoom: 15,
-            zoomControl: false,
-            mapDataControl: false,
-            scaleControl: false
+            zoom: 15, zoomControl: false, mapDataControl: false
         });
     }
 
-    function initPickerMap() {
-        if (pickerMap) return;
-        pickerMap = new naver.maps.Map('picker-map-area', {
+    function initFullRouteMap() {
+        if (fullMap) return;
+        fullMap = new naver.maps.Map('full-route-map', {
             center: new naver.maps.LatLng(37.5559, 126.9015),
-            zoom: 15
+            zoom: 14
         });
 
-        // 롱터치/클릭으로 픽업 지점 선택
-        naver.maps.Event.addListener(pickerMap, 'click', (e) => {
+        // 배경 지도 터치 시 플로팅 카드 열기 / 배경 터치 닫기 지원
+        naver.maps.Event.addListener(fullMap, 'click', (e) => {
             tempPickerCoord = { lat: e.coord.lat(), lng: e.coord.lng() };
-            document.getElementById('map-picker-modal').style.display = 'none';
-            document.getElementById('add-stop-modal').style.display = 'flex';
+            const card = document.getElementById('floating-pickup-card');
+            card.style.display = 'flex';
             populateStudentDropdown();
         });
     }
 
-    // 📡 파이어베이스 실시간 동기화
-    function syncFirebaseData() {
+    // 📡 Firebase 동기화
+    function syncFirebase() {
         onValue(ref(db, 'shuttle_v2/stops'), (snap) => {
             stopsData = snap.val() || {};
-            if (currentRole === 'driver') renderDriverTimeline();
+            if (currentRole === 'driver') renderDriverMetroTimeline();
             if (currentRole === 'user') updateUserView();
+            if (fullMap) renderFullMapRoute();
         });
 
         onValue(ref(db, 'shuttle_v2/users'), (snap) => {
             usersData = snap.val() || {};
-            if (currentRole === 'driver') renderDriverTimeline();
+            if (currentRole === 'driver') renderDriverMetroTimeline();
             if (currentRole === 'user') updateUserView();
         });
 
         onValue(ref(db, 'shuttle_v2/live'), (snap) => {
-            liveData = snap.val() || {};
+            liveData = snap.val() || { active: false, currentStopIndex: 0 };
+            if (currentRole === 'driver') renderDriverMetroTimeline();
             if (currentRole === 'user') updateUserLiveProgress();
         });
     }
 
-    // 📱 1. 학부모(사용자) 화면 업데이트 (3단 레이아웃 반영)
+    // 🚗 1. 운전자 메트로 노선도 렌더링 (첨부 1 디자인 반영)
+    function renderDriverMetroTimeline() {
+        const container = document.getElementById('metro-stops-container');
+        container.innerHTML = '';
+
+        // 무조건 시간 순서대로 정렬 (시간과 순번이 절대 뒤섞이지 않음)
+        const sortedStops = Object.values(stopsData).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        if (sortedStops.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-sub); font-size:12px;">등록된 정차지가 없습니다.<br>하단 버튼을 눌러 위치를 등록하세요.</div>';
+            return;
+        }
+
+        const currentIdx = liveData.currentStopIndex || 0;
+
+        sortedStops.forEach((stop, idx) => {
+            const isPassed = idx < currentIdx;
+            const isCurrent = idx === currentIdx;
+
+            const assignedStudents = Object.values(usersData).filter(u => u.stopId === stop.id).slice(0, 3);
+
+            let passengersHtml = '';
+            assignedStudents.forEach(st => {
+                let alertClass = '';
+                let statusTag = '';
+
+                if (st.todayRequest === 'DELAY_5M') { alertClass = 'alert'; statusTag = '⏳ 5분 지연'; }
+                else if (st.todayRequest === 'CHANGE_LOC') { alertClass = 'alert'; statusTag = '🔄 장소 변경'; }
+                else if (st.todayRequest === 'SELF_PICKUP') { alertClass = 'alert'; statusTag = '🚗 직접 이동'; }
+                else if (st.boarded) { alertClass = 'boarded'; statusTag = '✅ 탑승완료'; }
+
+                passengersHtml += `
+                    <div class="metro-passenger-chip ${alertClass}" onclick="openIndividualConfirmModal('${st.id}', '${st.childName}')">
+                        <span>${st.childName}</span>
+                        ${statusTag ? `<span style="font-size:10px;">${statusTag}</span>` : ''}
+                    </div>
+                `;
+            });
+
+            const item = document.createElement('div');
+            item.className = `metro-track-item ${isPassed ? 'passed' : ''}`;
+            item.innerHTML = `
+                <div class="metro-node">
+                    <div class="metro-node-inner"></div>
+                </div>
+                <div class="metro-content">
+                    <div class="metro-stop-title-row">
+                        <span class="metro-stop-num">${idx + 1}</span>
+                        <span class="metro-stop-name">${stop.name}</span>
+                        <span class="metro-stop-time">${stop.time || ''}</span>
+                    </div>
+                    <div class="metro-passengers">
+                        ${passengersHtml || '<span style="font-size:11px; color:var(--text-sub);">배정 원생 없음</span>'}
+                    </div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    // 📍 네이버 경유 길찾기 지도 렌더링
+    function renderFullMapRoute() {
+        if (!fullMap) return;
+        if (fullMapPolyline) { fullMapPolyline.setMap(null); fullMapPolyline = null; }
+        fullMapArrowMarkers.forEach(m => m.setMap(null));
+        fullMapArrowMarkers = [];
+
+        const sortedStops = Object.values(stopsData).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        if (sortedStops.length < 2) return;
+
+        const pathCoords = sortedStops.map(s => new naver.maps.LatLng(s.lat, s.lng));
+
+        fullMapPolyline = new naver.maps.Polyline({
+            map: fullMap,
+            path: pathCoords,
+            strokeColor: '#DF8706',
+            strokeWeight: 5,
+            strokeOpacity: 0.9,
+            strokeLineCap: 'round',
+            strokeLineJoin: 'round'
+        });
+
+        // 각 정차지 마커 및 구간 화살표 생성
+        sortedStops.forEach((s, idx) => {
+            new naver.maps.Marker({
+                position: new naver.maps.LatLng(s.lat, s.lng),
+                map: fullMap,
+                icon: {
+                    content: `
+                        <div style="background:#2C2825; color:#fff; padding:3px 7px; border-radius:6px; font-size:10px; font-weight:800; border:1.5px solid #DF8706; white-space:nowrap; transform:translate(-50%, -100%);">
+                            <span>${idx + 1}. ${s.name} (${s.time})</span>
+                        </div>
+                    `,
+                    anchor: new naver.maps.Point(0, 0)
+                }
+            });
+        });
+    }
+
+    // 🕹️ 테스트용 버튼 핸들러
+    document.getElementById('btn-simulate-arrive').addEventListener('click', async () => {
+        const sortedStops = Object.values(stopsData).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        if (sortedStops.length === 0) return;
+
+        let nextIdx = (liveData.currentStopIndex || 0) + 1;
+        if (nextIdx >= sortedStops.length) nextIdx = 0;
+
+        const targetStop = sortedStops[nextIdx];
+
+        await update(ref(db, 'shuttle_v2/live'), {
+            lat: targetStop.lat,
+            lng: targetStop.lng,
+            active: true,
+            currentStopIndex: nextIdx,
+            updatedAt: Date.now()
+        });
+
+        // 해당 정차지에 배정된 원생이 있으면 개별 탑승 확인 모달 트리거
+        const targetStudents = Object.values(usersData).filter(u => u.stopId === targetStop.id);
+        if (targetStudents.length > 0) {
+            openIndividualConfirmModal(targetStudents[0].id, targetStudents[0].childName);
+        } else {
+            showToast(`[${targetStop.name}]에 도착했습니다.`);
+        }
+    });
+
+    document.getElementById('btn-reset-data').addEventListener('click', async () => {
+        if (confirm("테스트 데이터를 초기 샘플 상태로 리셋하시겠습니까?")) {
+            await seedDemoData();
+            showToast("데이터가 초기화되었습니다.");
+        }
+    });
+
+    window.openIndividualConfirmModal = (studentId, studentName) => {
+        document.getElementById('confirm-modal-title').textContent = `🔔 [${studentName}] 탑승 확인`;
+        document.getElementById('confirm-modal-desc').textContent = `${studentName} 어린이가 차량에 탑승했습니까?`;
+        document.getElementById('pickup-confirm-modal').style.display = 'flex';
+
+        document.getElementById('btn-confirm-boarded').onclick = async () => {
+            await update(ref(db, `shuttle_v2/users/${studentId}`), { boarded: true });
+            document.getElementById('pickup-confirm-modal').style.display = 'none';
+            showToast(`${studentName} 원생 탑승 완료 처리`);
+        };
+
+        document.getElementById('btn-confirm-no').onclick = async () => {
+            await update(ref(db, `shuttle_v2/users/${studentId}`), { boarded: false });
+            document.getElementById('pickup-confirm-modal').style.display = 'none';
+            showToast(`${studentName} 원생 미탑승 처리`);
+        };
+    };
+
+    // 🗺️ 지도 보기 및 플로팅 카드 컨트롤
+    document.getElementById('btn-open-map-view').addEventListener('click', () => {
+        document.getElementById('map-view-modal').style.display = 'flex';
+        initFullRouteMap();
+        renderFullMapRoute();
+    });
+
+    document.getElementById('btn-close-map-view').addEventListener('click', () => {
+        document.getElementById('map-view-modal').style.display = 'none';
+    });
+
+    document.getElementById('btn-close-floating-card').addEventListener('click', () => {
+        document.getElementById('floating-pickup-card').style.display = 'none';
+    });
+
+    document.getElementById('btn-map-search').addEventListener('click', async () => {
+        const q = document.getElementById('map-search-input').value.trim();
+        if (!q) return;
+        try {
+            const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}`, {
+                headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
+            });
+            const data = await res.json();
+            if (data.documents && data.documents.length > 0) {
+                const first = data.documents[0];
+                fullMap.setCenter(new naver.maps.LatLng(parseFloat(first.y), parseFloat(first.x)));
+                fullMap.setZoom(16);
+                showToast("원하는 픽업 위치의 지도를 탭하세요.");
+            }
+        } catch(e) {}
+    });
+
+    function populateStudentDropdown() {
+        const sel = document.getElementById('select-new-stop-student');
+        sel.innerHTML = '<option value="">-- 배정 원생 선택 --</option>';
+        Object.values(usersData).forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = u.childName;
+            sel.appendChild(opt);
+        });
+    }
+
+    document.getElementById('btn-save-new-stop').addEventListener('click', async () => {
+        const name = document.getElementById('input-new-stop-name').value.trim();
+        const time = document.getElementById('input-new-stop-time').value;
+        const studentId = document.getElementById('select-new-stop-student').value;
+
+        if (!name || !tempPickerCoord) { showToast("장소명을 입력해주세요."); return; }
+
+        const newStopRef = push(ref(db, 'shuttle_v2/stops'));
+        const newStopId = newStopRef.key;
+
+        await set(newStopRef, {
+            id: newStopId,
+            name: name,
+            time: time,
+            lat: tempPickerCoord.lat,
+            lng: tempPickerCoord.lng
+        });
+
+        if (studentId) {
+            await update(ref(db, `shuttle_v2/users/${studentId}`), { stopId: newStopId });
+        }
+
+        document.getElementById('floating-pickup-card').style.display = 'none';
+        showToast("픽업 장소가 시간순으로 추가되었습니다.");
+    });
+
+    // 📱 사용자 화면 업데이트
     function updateUserView() {
         if (!currentUser) return;
-
         const myUser = usersData[currentUser.id] || currentUser;
         const myStop = stopsData[myUser.stopId];
 
@@ -620,26 +780,8 @@
             document.getElementById('info-pickup-time').textContent = myStop.time || '14:10';
             document.getElementById('info-pickup-loc').textContent = myStop.name || '미지정';
             document.getElementById('label-my-stop').textContent = myStop.name;
-
-            // 레이더 맵에 내 픽업 위치 마커 표시
-            if (userMap) {
-                const stopPos = new naver.maps.LatLng(myStop.lat, myStop.lng);
-                if (!userStopMarker) {
-                    userStopMarker = new naver.maps.Marker({
-                        position: stopPos,
-                        map: userMap,
-                        icon: {
-                            content: `<div class="radar-target-flag">🚩 ${myStop.name}</div>`,
-                            anchor: new naver.maps.Point(0, 0)
-                        }
-                    });
-                } else {
-                    userStopMarker.setPosition(stopPos);
-                }
-            }
         }
 
-        // 퀵 메시지 상태 활성화 표시
         document.querySelectorAll('.btn-quick-msg').forEach(btn => btn.classList.remove('active'));
         if (myUser.todayRequest === 'DELAY_5M') document.getElementById('btn-msg-delay5').classList.add('active');
         if (myUser.todayRequest === 'CHANGE_LOC') document.getElementById('btn-msg-change').classList.add('active');
@@ -647,59 +789,19 @@
     }
 
     function updateUserLiveProgress() {
-        if (!currentUser || !liveData || !liveData.active) {
-            document.getElementById('user-eta-minutes').textContent = '운행 대기';
-            document.getElementById('user-eta-subtext').textContent = '중입니다';
-            return;
-        }
-
+        if (!currentUser || !liveData || !liveData.active) return;
         const myUser = usersData[currentUser.id] || currentUser;
         const myStop = stopsData[myUser.stopId];
         if (!myStop) return;
 
-        // 버스 마커 업데이트
-        if (userMap) {
-            const busPos = new naver.maps.LatLng(liveData.lat, liveData.lng);
-            if (!userBusMarker) {
-                userBusMarker = new naver.maps.Marker({
-                    position: busPos,
-                    map: userMap,
-                    icon: {
-                        content: `<div class="radar-bus-dot"></div>`,
-                        anchor: new naver.maps.Point(9, 9)
-                    }
-                });
-            } else {
-                userBusMarker.setPosition(busPos);
-            }
-
-            // 패닝 제한 및 뷰 영역 맞춤
-            const bounds = new naver.maps.LatLngBounds();
-            bounds.extend(busPos);
-            bounds.extend(new naver.maps.LatLng(myStop.lat, myStop.lng));
-            userMap.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
-        }
-
-        // 선형 진척도 계산 (직선 거리 기준 N%)
-        const stopsArray = Object.values(stopsData).sort((a, b) => (a.order || 0) - (b.order || 0));
-        const myIdx = stopsArray.findIndex(s => s.id === myStop.id);
-        const prevStop = myIdx > 0 ? stopsArray[myIdx - 1] : { lat: 37.5559, lng: 126.9015, name: '출발지' };
-
-        document.getElementById('label-prev-stop').textContent = `... ${prevStop.name}`;
-
-        const totalDist = getDistance(prevStop.lat, prevStop.lng, myStop.lat, myStop.lng);
         const currentDist = getDistance(liveData.lat, liveData.lng, myStop.lat, myStop.lng);
-
-        let progressPercent = Math.max(0, Math.min(100, Math.round(((totalDist - currentDist) / totalDist) * 100)));
-        if (isNaN(progressPercent)) progressPercent = 0;
-
-        document.getElementById('user-progress-fill').style.width = `${progressPercent}%`;
-        document.getElementById('user-progress-bus-icon').style.left = `${progressPercent}%`;
-
-        // 잔여 시간 추정 (평균 시속 25km/h 기준)
         const remainMinutes = Math.max(1, Math.round((currentDist / 1000) / 25 * 60));
         document.getElementById('user-eta-minutes').textContent = `약 ${remainMinutes}분`;
         document.getElementById('user-eta-subtext').textContent = '후 도착 예정';
+
+        let progress = Math.max(10, Math.min(95, 100 - (currentDist / 15)));
+        document.getElementById('user-progress-fill').style.width = `${progress}%`;
+        document.getElementById('user-progress-bus-icon').style.left = `${progress}%`;
     }
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -710,207 +812,7 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // 🚗 2. 운전자 화면 (메트로 타임라인 렌더링)
-    function renderDriverTimeline() {
-        const container = document.getElementById('driver-timeline-container');
-        container.innerHTML = '';
-
-        const stops = Object.values(stopsData).sort((a, b) => (a.order || 0) - (b.order || 0));
-        if (stops.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:40px 10px; color:var(--text-muted); font-size:12px;">등록된 픽업 지점이 없습니다.<br>우측 하단 버튼을 눌러 위치를 등록하세요.</div>';
-            return;
-        }
-
-        stops.forEach((stop, idx) => {
-            const card = document.createElement('div');
-            card.className = 'metro-stop-card';
-
-            const assignedStudents = Object.values(usersData).filter(u => u.stopId === stop.id).slice(0, 3);
-
-            let passengersHtml = '';
-            assignedStudents.forEach(st => {
-                let statusBadge = '';
-                if (st.todayRequest === 'DELAY_5M') statusBadge = '<span class="passenger-alert-tag">⏳ 5분 지연</span>';
-                if (st.todayRequest === 'CHANGE_LOC') statusBadge = '<span class="passenger-alert-tag">🔄 장소 변경</span>';
-                if (st.todayRequest === 'SELF_PICKUP') statusBadge = '<span class="passenger-alert-tag">🚗 직접 이동</span>';
-                if (st.boarded) statusBadge = '<span class="passenger-boarded-tag">✅ 탑승완료</span>';
-
-                passengersHtml += `
-                    <div class="passenger-item-row">
-                        <span class="passenger-name">${st.childName}</span>
-                        ${statusBadge}
-                        <button type="button" class="btn-individual-pickup" onclick="openPickupConfirmModal('${st.id}', '${st.childName}')">탑승 확인</button>
-                    </div>
-                `;
-            });
-
-            card.innerHTML = `
-                <div class="stop-header-row">
-                    <span class="stop-order-tag">STEP ${String.fromCharCode(65 + idx)}</span>
-                    <span class="stop-time-tag">${stop.time || ''}</span>
-                </div>
-                <div class="stop-name-title">${stop.name}</div>
-                <div class="student-passenger-list">
-                    ${passengersHtml || '<div style="font-size:11px; color:var(--text-muted);">배정된 원생 없음</div>'}
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
-
-    window.openPickupConfirmModal = (studentId, studentName) => {
-        document.getElementById('confirm-modal-title').textContent = `🔔 [${studentName}] 탑승 확인`;
-        document.getElementById('confirm-modal-desc').textContent = `${studentName} 어린이가 셔틀에 탑승했습니까?`;
-        document.getElementById('pickup-confirm-modal').style.display = 'flex';
-
-        document.getElementById('btn-confirm-boarded').onclick = async () => {
-            await update(ref(db, `shuttle_v2/users/${studentId}`), { boarded: true });
-            document.getElementById('pickup-confirm-modal').style.display = 'none';
-            showToast(`${studentName} 원생 탑승 처리 완료`);
-        };
-
-        document.getElementById('btn-confirm-no').onclick = async () => {
-            await update(ref(db, `shuttle_v2/users/${studentId}`), { boarded: false });
-            document.getElementById('pickup-confirm-modal').style.display = 'none';
-            showToast(`${studentName} 원생 미탑승 처리`);
-        };
-    };
-
-    // 📡 운전자 스마트 GPS 엔진
-    const btnGpsToggle = document.getElementById('btn-driver-gps-toggle');
-    const driverGpsDot = document.getElementById('driver-gps-dot');
-    const driverGpsText = document.getElementById('driver-gps-status-text');
-
-    btnGpsToggle.addEventListener('click', () => {
-        if (!isBroadcastingGps) {
-            if (!navigator.geolocation) { alert("위치 서비스를 지원하지 않습니다."); return; }
-
-            watchPosId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-
-                    update(ref(db, 'shuttle_v2/live'), {
-                        lat: lat,
-                        lng: lng,
-                        active: true,
-                        updatedAt: Date.now()
-                    });
-
-                    driverGpsDot.classList.add('active');
-                    driverGpsText.textContent = "실시간 전송 중";
-                },
-                (err) => console.warn(err),
-                { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
-            );
-
-            isBroadcastingGps = true;
-            btnGpsToggle.textContent = "전송 중지";
-            btnGpsToggle.style.background = "var(--alert-coral)";
-            showToast("실시간 GPS 위치 전송을 시작합니다.");
-        } else {
-            if (watchPosId) navigator.geolocation.clearWatch(watchPosId);
-            update(ref(db, 'shuttle_v2/live'), { active: false });
-            isBroadcastingGps = false;
-            driverGpsDot.classList.remove('active');
-            driverGpsText.textContent = "GPS 대기";
-            btnGpsToggle.textContent = "위치 전송 시작";
-            btnGpsToggle.style.background = "var(--accent-blue)";
-            showToast("GPS 위치 전송을 중지했습니다.");
-        }
-    });
-
-    // 📍 픽업 위치 및 원생 등록 모달
-    document.getElementById('btn-open-map-picker').addEventListener('click', () => {
-        document.getElementById('map-picker-modal').style.display = 'flex';
-        initPickerMap();
-    });
-
-    document.getElementById('btn-picker-close').addEventListener('click', () => {
-        document.getElementById('map-picker-modal').style.display = 'none';
-    });
-
-    document.getElementById('btn-picker-search').addEventListener('click', async () => {
-        const q = document.getElementById('picker-search-input').value.trim();
-        if (!q) return;
-
-        try {
-            const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}`, {
-                headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
-            });
-            const data = await res.json();
-            if (data.documents && data.documents.length > 0) {
-                const first = data.documents[0];
-                const center = new naver.maps.LatLng(parseFloat(first.y), parseFloat(first.x));
-                pickerMap.setCenter(center);
-                pickerMap.setZoom(16);
-                showToast("원하는 픽업 위치를 탭하세요.");
-            } else {
-                showToast("검색 결과가 없습니다.");
-            }
-        } catch(e) {
-            showToast("검색 실패");
-        }
-    });
-
-    function populateStudentDropdown() {
-        const select = document.getElementById('new-stop-student-select');
-        select.innerHTML = '<option value="">-- 배정할 원생 선택 --</option>';
-        Object.values(usersData).forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u.id;
-            opt.textContent = `${u.childName} (학부모: ${u.parentPhone || '미등록'})`;
-            select.appendChild(opt);
-        });
-    }
-
-    document.getElementById('btn-save-new-stop').addEventListener('click', async () => {
-        const name = document.getElementById('new-stop-name').value.trim();
-        const time = document.getElementById('new-stop-time').value;
-        const studentId = document.getElementById('new-stop-student-select').value;
-
-        if (!name || !tempPickerCoord) { showToast("장소명을 입력해주세요."); return; }
-
-        const stopCount = Object.keys(stopsData).length;
-        const newStopRef = push(ref(db, 'shuttle_v2/stops'));
-        const newStopId = newStopRef.key;
-
-        await set(newStopRef, {
-            id: newStopId,
-            name: name,
-            time: time,
-            lat: tempPickerCoord.lat,
-            lng: tempPickerCoord.lng,
-            order: stopCount
-        });
-
-        if (studentId) {
-            await update(ref(db, `shuttle_v2/users/${studentId}`), { stopId: newStopId });
-        }
-
-        document.getElementById('add-stop-modal').style.display = 'none';
-        showToast("픽업 위치가 등록되었습니다.");
-    });
-
-    document.getElementById('btn-cancel-new-stop').addEventListener('click', () => {
-        document.getElementById('add-stop-modal').style.display = 'none';
-    });
-
-    // ⚡ 학부모 원터치 퀵 메시지 핸들러
-    async function sendUserQuickRequest(reqType) {
-        if (!currentUser) return;
-        await update(ref(db, `shuttle_v2/users/${currentUser.id}`), {
-            todayRequest: reqType,
-            requestTimestamp: Date.now()
-        });
-        showToast("기사님께 알림이 전송되었습니다.");
-    }
-
-    document.getElementById('btn-msg-delay5').addEventListener('click', () => sendUserQuickRequest('DELAY_5M'));
-    document.getElementById('btn-msg-change').addEventListener('click', () => sendUserQuickRequest('CHANGE_LOC'));
-    document.getElementById('btn-msg-self').addEventListener('click', () => sendUserQuickRequest('SELF_PICKUP'));
-
-    // 👤 로그인 및 모드 전환
+    // 👤 로그인 및 진입 핸들러
     document.getElementById('btn-switch-mode').addEventListener('click', () => {
         document.getElementById('login-modal').style.display = 'flex';
     });
@@ -921,25 +823,19 @@
         document.getElementById('driver-view-container').style.display = 'flex';
         document.getElementById('user-view-container').style.display = 'none';
         document.getElementById('login-modal').style.display = 'none';
-        renderDriverTimeline();
+        renderDriverMetroTimeline();
         showToast("운전자 모드로 접속했습니다.");
     });
 
     document.getElementById('btn-enter-user').addEventListener('click', async () => {
         const name = document.getElementById('login-child-name').value.trim();
         const pin = document.getElementById('login-pin').value.trim();
-
-        if (!name) { showToast("원생 이름을 입력하세요."); return; }
+        if (!name) { showToast("원생 이름을 입력해주세요."); return; }
 
         let targetUser = Object.values(usersData).find(u => u.childName === name);
         if (targetUser) {
-            if (targetUser.pin && targetUser.pin !== pin) {
-                showToast("PIN 번호가 일치하지 않습니다.");
-                return;
-            }
             currentUser = targetUser;
         } else {
-            // 신규 가입 자동 등록 (A안)
             const newUserRef = push(ref(db, 'shuttle_v2/users'));
             currentUser = {
                 id: newUserRef.key,
@@ -962,37 +858,58 @@
         showToast(`${currentUser.childName} 학부모 모드로 접속했습니다.`);
     });
 
+    async function sendUserQuickRequest(reqType) {
+        if (!currentUser) return;
+        await update(ref(db, `shuttle_v2/users/${currentUser.id}`), { todayRequest: reqType });
+        showToast("기사님께 메시지가 전달되었습니다.");
+    }
+    document.getElementById('btn-msg-delay5').addEventListener('click', () => sendUserQuickRequest('DELAY_5M'));
+    document.getElementById('btn-msg-change').addEventListener('click', () => sendUserQuickRequest('CHANGE_LOC'));
+    document.getElementById('btn-msg-self').addEventListener('click', () => sendUserQuickRequest('SELF_PICKUP'));
+
     // 초기 샘플 데이터 세팅
     async function seedDemoData() {
-        const snap = await get(ref(db, 'shuttle_v2/stops'));
-        if (!snap.exists()) {
-            const defaultStops = [
-                { name: "망원역 6호선 (출발)", time: "14:00", lat: 37.5559, lng: 126.9105, order: 0 },
-                { name: "진평925 앞", time: "14:08", lat: 37.5578, lng: 126.9065, order: 1 },
-                { name: "합성드림빌아파트 정문", time: "14:15", lat: 37.5610, lng: 126.8990, order: 2 }
-            ];
+        const defaultStops = [
+            { name: "망원역 6호선 (출발)", time: "14:00", lat: 37.5559, lng: 126.9105 },
+            { name: "진평925 앞", time: "14:08", lat: 37.5578, lng: 126.9065 },
+            { name: "합성드림빌아파트 정문", time: "14:15", lat: 37.5610, lng: 126.8990 },
+            { name: "서울망원초등학교", time: "14:22", lat: 37.5630, lng: 126.9010 }
+        ];
 
-            const createdStopIds = [];
-            for (const s of defaultStops) {
-                const sRef = push(ref(db, 'shuttle_v2/stops'));
-                await set(sRef, { id: sRef.key, ...s });
-                createdStopIds.push(sRef.key);
-            }
-
-            const defaultUsers = [
-                { childName: "김민준", pin: "1234", stopId: createdStopIds[1], crewTitle: "화목 유아체육 1반" },
-                { childName: "이서아", pin: "1234", stopId: createdStopIds[2], crewTitle: "화목 유아체육 1반" }
-            ];
-            for (const u of defaultUsers) {
-                const uRef = push(ref(db, 'shuttle_v2/users'));
-                await set(uRef, { id: uRef.key, ...u });
-            }
+        const stopIds = [];
+        await set(ref(db, 'shuttle_v2/stops'), {});
+        for (const s of defaultStops) {
+            const sRef = push(ref(db, 'shuttle_v2/stops'));
+            await set(sRef, { id: sRef.key, ...s });
+            stopIds.push(sRef.key);
         }
+
+        const defaultUsers = [
+            { childName: "김민준", pin: "1234", stopId: stopIds[1], crewTitle: "화목 유아체육 1반" },
+            { childName: "이서아", pin: "1234", stopId: stopIds[2], crewTitle: "화목 유아체육 1반" },
+            { childName: "박도윤", pin: "1234", stopId: stopIds[3], crewTitle: "화목 유아체육 1반" }
+        ];
+        await set(ref(db, 'shuttle_v2/users'), {});
+        for (const u of defaultUsers) {
+            const uRef = push(ref(db, 'shuttle_v2/users'));
+            await set(uRef, { id: uRef.key, ...u });
+        }
+
+        await set(ref(db, 'shuttle_v2/live'), {
+            active: true,
+            currentStopIndex: 0,
+            lat: defaultStops[0].lat,
+            lng: defaultStops[0].lng,
+            updatedAt: Date.now()
+        });
     }
 
     window.onload = async () => {
-        await seedDemoData();
-        syncFirebaseData();
+        const snap = await get(ref(db, 'shuttle_v2/stops'));
+        if (!snap.exists()) {
+            await seedDemoData();
+        }
+        syncFirebase();
     };
 </script>
 </body>
