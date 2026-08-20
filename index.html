@@ -498,12 +498,14 @@
     let currentUser = null;
 
     let userMap = null;
+    let userMapPolyline = null;
+    let userStopMarkers = [];
+    let userBlueDotMarker = null;
+    let userStopFlagMarker = null;
+
     let fullMap = null;
     let fullMapPolyline = null;
     let fullMapArrowMarkers = [];
-
-    let userBlueDotMarker = null;
-    let userStopFlagMarker = null;
 
     let stopsData = {};
     let usersData = {};
@@ -554,7 +556,10 @@
         onValue(ref(db, 'shuttle_v2/stops'), (snap) => {
             stopsData = snap.val() || {};
             if (currentRole === 'driver') renderDriverMetroTimeline();
-            if (currentRole === 'user') updateUserView();
+            if (currentRole === 'user') {
+                updateUserView();
+                renderUserRadarMapRoute();
+            }
             if (fullMap) renderFullMapRoute();
         });
 
@@ -568,6 +573,50 @@
             liveData = snap.val() || { active: false, currentStopIndex: 0 };
             if (currentRole === 'driver') renderDriverMetroTimeline();
             if (currentRole === 'user') updateUserLiveProgress();
+        });
+    }
+
+    // 🛣️ 학부모 지도 화면에 전체 경로선 및 정차지 렌더링
+    function renderUserRadarMapRoute() {
+        if (!userMap) return;
+        if (userMapPolyline) { userMapPolyline.setMap(null); userMapPolyline = null; }
+        userStopMarkers.forEach(m => m.setMap(null));
+        userStopMarkers = [];
+
+        const sortedStops = Object.values(stopsData).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        if (sortedStops.length < 2) return;
+
+        const pathCoords = sortedStops.map(s => new naver.maps.LatLng(s.lat, s.lng));
+
+        // 전체 경로선
+        userMapPolyline = new naver.maps.Polyline({
+            map: userMap,
+            path: pathCoords,
+            strokeColor: '#DF8706',
+            strokeWeight: 4,
+            strokeOpacity: 0.85,
+            strokeLineCap: 'round',
+            strokeLineJoin: 'round'
+        });
+
+        // 각 정차지 원형 점 마커
+        sortedStops.forEach((s, idx) => {
+            const isMyStop = currentUser && currentUser.stopId === s.id;
+            if (!isMyStop) {
+                const marker = new naver.maps.Marker({
+                    position: new naver.maps.LatLng(s.lat, s.lng),
+                    map: userMap,
+                    icon: {
+                        content: `
+                            <div style="background:#2C2825; color:#fff; padding:2px 6px; border-radius:4px; font-size:9px; font-weight:800; border:1px solid #DF8706; white-space:nowrap; transform:translate(-50%, -50%); opacity:0.8;">
+                                ${idx + 1}. ${s.name}
+                            </div>
+                        `,
+                        anchor: new naver.maps.Point(0, 0)
+                    }
+                });
+                userStopMarkers.push(marker);
+            }
         });
     }
 
@@ -863,7 +912,7 @@
         showToast("픽업 장소가 시간순으로 추가되었습니다.");
     });
 
-    // 📱 2. 학부모(사용자) 화면 업데이트 & 실시간 파란 점(운전자 위치) 렌더링
+    // 📱 2. 학부모(사용자) 화면 업데이트
     function updateUserView() {
         if (!currentUser) return;
         const myUser = usersData[currentUser.id] || currentUser;
@@ -903,22 +952,21 @@
         if (myUser.todayRequest === 'DELAY_5M') document.getElementById('btn-msg-delay5').classList.add('active');
         if (myUser.todayRequest === 'CHANGE_LOC') document.getElementById('btn-msg-change').classList.add('active');
         if (myUser.todayRequest === 'SELF_PICKUP') document.getElementById('btn-msg-self').classList.add('active');
+
+        renderUserRadarMapRoute();
     }
 
-    // 🔵 학부모 화면에서 운전자의 실시간 위치를 '파란 점'으로 표시
     function updateUserLiveProgress() {
         if (!currentUser) return;
         const myUser = usersData[currentUser.id] || currentUser;
         const myStop = stopsData[myUser.stopId];
 
-        // 운전자 위치 좌표 확보 (GPS 활성화 중이거나 시뮬레이션 중인 좌표)
         const driverLat = liveData.lat || (stopsData[Object.keys(stopsData)[0]] || {}).lat;
         const driverLng = liveData.lng || (stopsData[Object.keys(stopsData)[0]] || {}).lng;
 
         if (driverLat && driverLng && userMap) {
             const driverPos = new naver.maps.LatLng(driverLat, driverLng);
 
-            // 파란 점 마커 렌더링
             if (!userBlueDotMarker) {
                 userBlueDotMarker = new naver.maps.Marker({
                     position: driverPos,
@@ -932,7 +980,7 @@
                 userBlueDotMarker.setPosition(driverPos);
             }
 
-            // 지도 뷰 영역 자동 맞춤 (내 픽업지와 운전자 파란 점을 한눈에 표시)
+            // 지도 뷰 영역 자동 맞춤
             if (myStop) {
                 const bounds = new naver.maps.LatLngBounds();
                 bounds.extend(driverPos);
@@ -945,7 +993,6 @@
 
         if (!myStop || !driverLat || !driverLng) return;
 
-        // 선형 게이지 및 ETA 잔여 시간 계산
         const currentDist = getDistance(driverLat, driverLng, myStop.lat, myStop.lng);
         const remainMinutes = Math.max(1, Math.round((currentDist / 1000) / 25 * 60));
         document.getElementById('user-eta-minutes').textContent = `약 ${remainMinutes}분`;
@@ -1007,7 +1054,10 @@
 
         initUserRadarMap();
         setTimeout(() => {
-            if (userMap) naver.maps.Event.trigger(userMap, 'resize');
+            if (userMap) {
+                naver.maps.Event.trigger(userMap, 'resize');
+                renderUserRadarMapRoute();
+            }
             updateUserView();
             updateUserLiveProgress();
         }, 100);
