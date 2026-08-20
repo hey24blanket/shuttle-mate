@@ -206,6 +206,31 @@
         .user-section-top { flex: 1.1; position: relative; background: #E0DDD7; border-bottom: 1px solid var(--border-line); }
         #user-radar-map { width: 100%; height: 100%; }
 
+        /* 🔵 학부모 화면 전용 실시간 파란 점 마커 */
+        .radar-blue-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--metro-blue);
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 2px 8px rgba(14, 124, 185, 0.4);
+            position: relative;
+            transform: translate(-50%, -50%);
+        }
+        .radar-blue-dot::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: rgba(14, 124, 185, 0.35);
+            animation: radar-pulse-blue 1.8s infinite ease-out;
+            z-index: -1;
+        }
+        @keyframes radar-pulse-blue {
+            0% { transform: scale(0.6); opacity: 1; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+
         .user-section-mid {
             flex: 0.9;
             padding: 16px 20px;
@@ -218,7 +243,7 @@
         }
         .progress-track-wrapper { position: relative; width: 100%; padding: 14px 0 6px; }
         .progress-track-line { width: 100%; height: 6px; background: #EBE7E1; border-radius: 3px; position: relative; }
-        .progress-fill-line { position: absolute; left: 0; top: 0; height: 100%; background: var(--metro-green); border-radius: 3px; width: 0%; transition: width 0.3s; }
+        .progress-fill-line { position: absolute; left: 0; top: 0; height: 100%; background: var(--metro-blue); border-radius: 3px; width: 0%; transition: width 0.3s; }
         .progress-bus-icon { position: absolute; top: -14px; transform: translateX(-50%); font-size: 18px; transition: left 0.3s; }
 
         .user-section-bottom {
@@ -477,6 +502,9 @@
     let fullMapPolyline = null;
     let fullMapArrowMarkers = [];
 
+    let userBlueDotMarker = null;
+    let userStopFlagMarker = null;
+
     let stopsData = {};
     let usersData = {};
     let liveData = { active: false, currentStopIndex: 0 };
@@ -495,11 +523,15 @@
     }
 
     function initUserRadarMap() {
-        if (userMap) return;
-        userMap = new naver.maps.Map('user-radar-map', {
-            center: new naver.maps.LatLng(37.5559, 126.9015),
-            zoom: 15, zoomControl: false, mapDataControl: false
-        });
+        if (!userMap) {
+            userMap = new naver.maps.Map('user-radar-map', {
+                center: new naver.maps.LatLng(37.5559, 126.9015),
+                zoom: 15,
+                zoomControl: false,
+                mapDataControl: false,
+                scaleControl: false
+            });
+        }
     }
 
     function initFullRouteMap() {
@@ -659,7 +691,6 @@
             showToast("위치 권한을 허용해주세요.");
             stopGps();
         } else {
-            // 실내 타임아웃 시 Wi-Fi 기반 일반 정확도로 백그라운드 재시도
             navigator.geolocation.getCurrentPosition(onGpsSuccess, null, {
                 enableHighAccuracy: false,
                 timeout: 15000,
@@ -832,7 +863,7 @@
         showToast("픽업 장소가 시간순으로 추가되었습니다.");
     });
 
-    // 📱 사용자 화면 업데이트
+    // 📱 2. 학부모(사용자) 화면 업데이트 & 실시간 파란 점(운전자 위치) 렌더링
     function updateUserView() {
         if (!currentUser) return;
         const myUser = usersData[currentUser.id] || currentUser;
@@ -845,6 +876,27 @@
             document.getElementById('info-pickup-time').textContent = myStop.time || '14:10';
             document.getElementById('info-pickup-loc').textContent = myStop.name || '미지정';
             document.getElementById('label-my-stop').textContent = myStop.name;
+
+            // 학부모 픽업 목표 지점 깃발 마커
+            if (userMap) {
+                const stopPos = new naver.maps.LatLng(myStop.lat, myStop.lng);
+                if (!userStopFlagMarker) {
+                    userStopFlagMarker = new naver.maps.Marker({
+                        position: stopPos,
+                        map: userMap,
+                        icon: {
+                            content: `
+                                <div style="background:#2C2825; color:#fff; padding:4px 8px; border-radius:6px; font-size:10.5px; font-weight:800; border:1.5px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.25); white-space:nowrap; transform:translate(-50%, -100%);">
+                                    🚩 ${myStop.name}
+                                </div>
+                            `,
+                            anchor: new naver.maps.Point(0, 0)
+                        }
+                    });
+                } else {
+                    userStopFlagMarker.setPosition(stopPos);
+                }
+            }
         }
 
         document.querySelectorAll('.btn-quick-msg').forEach(btn => btn.classList.remove('active'));
@@ -853,18 +905,53 @@
         if (myUser.todayRequest === 'SELF_PICKUP') document.getElementById('btn-msg-self').classList.add('active');
     }
 
+    // 🔵 학부모 화면에서 운전자의 실시간 위치를 '파란 점'으로 표시
     function updateUserLiveProgress() {
-        if (!currentUser || !liveData || !liveData.active) return;
+        if (!currentUser) return;
         const myUser = usersData[currentUser.id] || currentUser;
         const myStop = stopsData[myUser.stopId];
-        if (!myStop) return;
 
-        const currentDist = getDistance(liveData.lat, liveData.lng, myStop.lat, myStop.lng);
+        // 운전자 위치 좌표 확보 (GPS 활성화 중이거나 시뮬레이션 중인 좌표)
+        const driverLat = liveData.lat || (stopsData[Object.keys(stopsData)[0]] || {}).lat;
+        const driverLng = liveData.lng || (stopsData[Object.keys(stopsData)[0]] || {}).lng;
+
+        if (driverLat && driverLng && userMap) {
+            const driverPos = new naver.maps.LatLng(driverLat, driverLng);
+
+            // 파란 점 마커 렌더링
+            if (!userBlueDotMarker) {
+                userBlueDotMarker = new naver.maps.Marker({
+                    position: driverPos,
+                    map: userMap,
+                    icon: {
+                        content: `<div class="radar-blue-dot" title="운전자 실시간 위치"></div>`,
+                        anchor: new naver.maps.Point(9, 9)
+                    }
+                });
+            } else {
+                userBlueDotMarker.setPosition(driverPos);
+            }
+
+            // 지도 뷰 영역 자동 맞춤 (내 픽업지와 운전자 파란 점을 한눈에 표시)
+            if (myStop) {
+                const bounds = new naver.maps.LatLngBounds();
+                bounds.extend(driverPos);
+                bounds.extend(new naver.maps.LatLng(myStop.lat, myStop.lng));
+                userMap.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+            } else {
+                userMap.setCenter(driverPos);
+            }
+        }
+
+        if (!myStop || !driverLat || !driverLng) return;
+
+        // 선형 게이지 및 ETA 잔여 시간 계산
+        const currentDist = getDistance(driverLat, driverLng, myStop.lat, myStop.lng);
         const remainMinutes = Math.max(1, Math.round((currentDist / 1000) / 25 * 60));
         document.getElementById('user-eta-minutes').textContent = `약 ${remainMinutes}분`;
         document.getElementById('user-eta-subtext').textContent = '후 도착 예정';
 
-        let progress = Math.max(10, Math.min(95, 100 - (currentDist / 15)));
+        let progress = Math.max(5, Math.min(95, 100 - (currentDist / 20)));
         document.getElementById('user-progress-fill').style.width = `${progress}%`;
         document.getElementById('user-progress-bus-icon').style.left = `${progress}%`;
     }
@@ -919,7 +1006,12 @@
         document.getElementById('login-modal').style.display = 'none';
 
         initUserRadarMap();
-        updateUserView();
+        setTimeout(() => {
+            if (userMap) naver.maps.Event.trigger(userMap, 'resize');
+            updateUserView();
+            updateUserLiveProgress();
+        }, 100);
+
         showToast(`${currentUser.childName} 학부모 모드로 접속했습니다.`);
     });
 
