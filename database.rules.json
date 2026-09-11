@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "shuttle_v3": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
