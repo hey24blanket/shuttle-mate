@@ -17,6 +17,8 @@ import {
   WifiOff,
   Users,
 } from "lucide-react";
+import { LocationControls } from "@/components/location-controls";
+import { useLocation } from "@/components/location-provider";
 import { Shell } from "@/components/shell";
 import { useStore } from "@/components/provider";
 import { Badge, Modal } from "@/components/ui";
@@ -34,6 +36,7 @@ import {
 export default function Driver() {
   const { data, act, notify } = useStore();
   const t = data.trip;
+  const { label: locationStatus } = useLocation();
   const [tab, setTab] = useState("timeline");
   const [confirm, setConfirm] = useState<{
     id: string;
@@ -78,26 +81,21 @@ export default function Driver() {
               {statusLabel[t.status]}
             </Badge>
             <span>
-              {t.gps === "LOST" ? (
-                <>
-                  <WifiOff size={15} /> 위치 수신 중단
-                </>
-              ) : (
-                <>
-                  <span className="live-dot" />
-                  예시 위치 · 체험 운행
-                </>
-              )}
+              <>
+                <span className="live-dot" />
+                {locationStatus}
+              </>
             </span>
             <span>12가 3456</span>
           </div>
           {t.gps === "LOST" && (
             <div className="notice warning">
               <AlertTriangle size={18} />
-              위치를 확인할 수 없어요. 학부모에게는 마지막 운행 상태만
-              안내됩니다.
+              예시 노선의 위치 수신 중단 상황을 체험 중입니다. 실제 휴대폰
+              GPS와는 별개입니다.
             </div>
           )}
+          <LocationControls onMap={() => setTab("map")} />
           {pending > 0 && (
             <button className="driver-alert" onClick={() => setRequests(true)}>
               <span>

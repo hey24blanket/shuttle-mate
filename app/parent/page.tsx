@@ -196,7 +196,7 @@ export default function Parent() {
                   ? "위치 공유 종료"
                   : t.gps === "LOST"
                     ? "위치 확인 중"
-                    : "예시 위치"}
+                    : "휴대폰 GPS"}
               </Badge>
             </div>
             <RouteMap privateView />
@@ -206,7 +206,7 @@ export default function Parent() {
                 ? "오늘 운행이 종료되었습니다."
                 : t.gps === "LOST"
                   ? "위치 수신이 중단되어 차량 표시를 숨겼어요."
-                  : `${t.stops[t.current].name} ${t.phase === "ARRIVED" ? "도착" : "방향으로 이동 중"}`}
+                  : `예시 노선: ${t.stops[t.current].name} ${t.phase === "ARRIVED" ? "도착" : "방향으로 이동 중"}`}
             </div>
           </section>
           <section className="card child-card">

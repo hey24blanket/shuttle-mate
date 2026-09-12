@@ -1,4 +1,5 @@
 "use client";
+import { useLocation } from "./location-provider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, ReactNode } from "react";
@@ -35,6 +36,7 @@ export function Shell({
   children: ReactNode;
 }) {
   const { data, online } = useStore();
+  const location = useLocation();
   const path = usePathname();
   const [menu, setMenu] = useState(false);
   const [info, setInfo] = useState(false);
@@ -168,6 +170,15 @@ export function Shell({
             인터넷 연결이 끊겼어요. 체험 변경은 이 기기에 저장됩니다.
           </div>
         )}
+        {location.tracking && (
+          <div className="location-sharing">
+            <span>
+              <span className="live-dot" /> 내 휴대폰 위치 추적 중 ·{" "}
+              {location.label}
+            </span>
+            <button onClick={location.stop}>추적 중지</button>
+          </div>
+        )}
         <main className={role === "admin" ? "main-content" : "role-content"}>
           {children}
         </main>
@@ -199,7 +210,8 @@ export function Shell({
           <div className="notice">
             모든 이름과 위치는 시연용입니다. 변경은 현재 브라우저에 저장되며
             같은 브라우저의 탭에 반영됩니다. 실제 계정 인증, 기기 간 동기화,
-            GPS, 도로 ETA, 문자·푸시는 연결하지 않았습니다.
+            도로 ETA, 문자·푸시는 연결하지 않았습니다. 실제 휴대폰 위치는 운전자
+            화면에서 권한을 허용하면 추적할 수 있습니다.
           </div>
           <Link
             className="button primary full"

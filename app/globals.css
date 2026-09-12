@@ -3039,25 +3039,281 @@ blockquote {
   }
 }
 /* Keep supporting text readable on small screens and in bright daylight. */
-.subtitle, .card-description, .helper, .request-detail, .stop-address,
-.child-profile p, .child-details small, .child-driver, .setting-row p,
-.builder-info > p, .parent-map-caption, .modal-description { color: #75816b; }
-.stat-card > p, .trip-name p, .activity small, .table-footer, .request-body p,
-.map-bottom small, .schedule-row small, .schedule-note { color: #7f8975; }
-.notice { color: #6e7f5d; }
-.request-detail, .card-description, .helper { font-size: 11px; }
-.stat-card > p, .trip-name p, .table-head, .activity small { font-size: 10px; }
-.parent-main { display: flex; flex-direction: column; }
-.parent-main > .role-heading { order: 0; }
-.parent-main > .parent-hero { order: 1; }
-.parent-main > .child-card { order: 2; margin-bottom: 21px; }
-.parent-main > .parent-map { order: 3; margin-bottom: 0; }
+.subtitle,
+.card-description,
+.helper,
+.request-detail,
+.stop-address,
+.child-profile p,
+.child-details small,
+.child-driver,
+.setting-row p,
+.builder-info > p,
+.parent-map-caption,
+.modal-description {
+  color: #75816b;
+}
+.stat-card > p,
+.trip-name p,
+.activity small,
+.table-footer,
+.request-body p,
+.map-bottom small,
+.schedule-row small,
+.schedule-note {
+  color: #7f8975;
+}
+.notice {
+  color: #6e7f5d;
+}
+.request-detail,
+.card-description,
+.helper {
+  font-size: 11px;
+}
+.stat-card > p,
+.trip-name p,
+.table-head,
+.activity small {
+  font-size: 10px;
+}
+.parent-main {
+  display: flex;
+  flex-direction: column;
+}
+.parent-main > .role-heading {
+  order: 0;
+}
+.parent-main > .parent-hero {
+  order: 1;
+}
+.parent-main > .child-card {
+  order: 2;
+  margin-bottom: 21px;
+}
+.parent-main > .parent-map {
+  order: 3;
+  margin-bottom: 0;
+}
 @media (max-width: 760px) {
-  .role-switch a, .mobile-shell .role-switch a { font-size: 11px; padding: 7px 8px; }
-  .stat-card > p, .trip-name p, .activity small { font-size: 9px; }
-  .parent-hero-copy p { font-size: 12px; }
-  .child-details strong { font-size: 13px; }
-  .child-details small, .child-driver, .child-driver .text-button { font-size: 10px; }
-  .parent-progress-label { font-size: 10px; }
-  .stop-summary, .stop-address { font-size: 11px; }
+  .role-switch a,
+  .mobile-shell .role-switch a {
+    font-size: 11px;
+    padding: 7px 8px;
+  }
+  .stat-card > p,
+  .trip-name p,
+  .activity small {
+    font-size: 9px;
+  }
+  .parent-hero-copy p {
+    font-size: 12px;
+  }
+  .child-details strong {
+    font-size: 13px;
+  }
+  .child-details small,
+  .child-driver,
+  .child-driver .text-button {
+    font-size: 10px;
+  }
+  .parent-progress-label {
+    font-size: 10px;
+  }
+  .stop-summary,
+  .stop-address {
+    font-size: 11px;
+  }
+}
+.location-controls {
+  padding: 18px;
+  border: 1px solid #dae4d4;
+  background: #f2f7ec;
+  border-radius: 13px;
+  margin-bottom: 20px;
+}
+.location-controls strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.location-controls [role="status"] {
+  font-size: 12px;
+  color: #58764a;
+  margin-top: 8px;
+}
+.location-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.location-actions .button {
+  min-height: 46px;
+  font-size: 12px;
+}
+.location-help,
+.location-controls details {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #708267;
+  margin-top: 12px;
+}
+.location-controls details p {
+  margin-top: 10px;
+}
+.location-controls summary {
+  cursor: pointer;
+  color: #426d40;
+}
+.location-warning {
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #946a28;
+  background: #fff2db;
+}
+.location-sharing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 24px;
+  background: #e5f0d9;
+  color: #4b703b;
+  font-size: 11px;
+}
+.location-sharing .live-dot {
+  margin-right: 7px;
+}
+.location-sharing button {
+  border: 1px solid #bad0a7;
+  border-radius: 7px;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+.map-switcher > .tabs {
+  padding-top: 15px;
+  background: #fbfcf7;
+}
+.live-map-section {
+  position: relative;
+}
+.live-map-canvas {
+  height: 340px;
+  width: 100%;
+  z-index: 0;
+  background: #e8eee5;
+}
+.live-map-empty {
+  position: absolute;
+  left: 50%;
+  top: 105px;
+  transform: translateX(-50%);
+  width: min(300px, 85%);
+  z-index: 1;
+  background: #fffefaf5;
+  border: 1px solid #e0e6d8;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 5px 24px #20302015;
+  pointer-events: none;
+}
+.live-map-empty strong {
+  display: block;
+  margin: 10px 0;
+  font-size: 14px;
+}
+.live-map-empty p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #78896a;
+}
+.follow-location {
+  position: absolute;
+  bottom: 108px;
+  left: 15px;
+  z-index: 2;
+  background: #fffefa;
+  box-shadow: 0 3px 10px #213e2820;
+  border: 1px solid #d7e0ce;
+  padding: 11px 13px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #5d7750;
+}
+.follow-location.following {
+  color: #2775be;
+}
+.live-location-info {
+  padding: 15px 18px;
+  display: flex;
+  gap: 6px;
+  flex-direction: column;
+  min-height: 94px;
+  background: #fafcf5;
+  border-top: 1px solid #e2e9d9;
+}
+.live-location-info strong {
+  font-size: 12px;
+  color: #456837;
+}
+.live-location-info span {
+  font-size: 11px;
+  color: #778568;
+}
+.live-location-info code {
+  font-size: 12px;
+  color: #496c3c;
+  letter-spacing: 0.02em;
+}
+.leaflet-container {
+  font-family: inherit;
+}
+.leaflet-control-attribution {
+  font-size: 10px !important;
+}
+.leaflet-control-zoom a {
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+}
+.live-map-canvas .leaflet-control-attribution a {
+  color: #346637;
+}
+.location-controls + .driver-alert {
+  margin-top: 4px;
+}
+@media (max-width: 760px) {
+  .location-controls {
+    padding: 16px;
+  }
+  .location-actions {
+    gap: 6px;
+  }
+  .location-actions .button {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  .location-sharing {
+    font-size: 10px;
+    padding: 9px 16px;
+  }
+  .live-map-canvas {
+    height: 300px;
+  }
+  .live-map-empty {
+    top: 85px;
+  }
+  .location-help {
+    font-size: 11px;
+  }
+  .live-location-info {
+    padding: 14px 16px;
+  }
 }

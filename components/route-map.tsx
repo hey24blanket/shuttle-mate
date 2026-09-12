@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
   BusFront,
@@ -10,7 +11,33 @@ import {
 } from "lucide-react";
 import { useStore } from "./provider";
 import { isFinished } from "@/lib/trip";
+const LiveMap = dynamic(() => import("./live-map"), {
+  ssr: false,
+  loading: () => <div className="empty">실제 지도를 불러오는 중…</div>,
+});
 export function RouteMap({ privateView = false }: { privateView?: boolean }) {
+  const [mode, setMode] = useState("live");
+  return (
+    <div className="map-switcher">
+      <div className="tabs">
+        <button
+          className={mode === "live" ? "active" : ""}
+          onClick={() => setMode("live")}
+        >
+          실제 위치
+        </button>
+        <button
+          className={mode === "demo" ? "active" : ""}
+          onClick={() => setMode("demo")}
+        >
+          예시 노선
+        </button>
+      </div>
+      {mode === "live" ? <LiveMap /> : <DemoMap />}
+    </div>
+  );
+}
+function DemoMap() {
   const { data } = useStore();
   const t = data.trip;
   const [zoom, setZoom] = useState(1);

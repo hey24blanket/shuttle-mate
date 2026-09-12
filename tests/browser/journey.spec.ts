@@ -38,7 +38,7 @@ test("parent request, operator approval, driver boarding, full dropoff and compl
     .getByRole("button", { name: "현재 정차지 도착", exact: true })
     .click();
   await admin.getByRole("button", { name: "출발 · 다음 정차지로" }).click();
-  await expect(admin.getByRole("status")).toContainText(
+  await expect(admin.locator(".toast")).toContainText(
     "탑승 여부를 확인하지 않은 아동",
   );
   await admin
@@ -76,7 +76,7 @@ test("parent request, operator approval, driver boarding, full dropoff and compl
   await admin
     .getByRole("button", { name: "하차 확인 완료 · 운행 종료" })
     .click();
-  await expect(admin.getByRole("status")).toContainText(
+  await expect(admin.locator(".toast")).toContainText(
     "모든 아동의 탑승 결과와 하차",
   );
   while (

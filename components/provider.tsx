@@ -26,7 +26,9 @@ export function Provider({ children }: { children: ReactNode }) {
     try {
       const raw = localStorage.getItem(KEY);
       const value = raw ? JSON.parse(raw) : null;
-      setData(value?.version === 1 ? value : seed());
+      const initial = value?.version === 1 ? value : seed();
+      if (!value) localStorage.setItem(KEY, JSON.stringify(initial));
+      setData(initial);
     } catch {
       setData(seed());
     }
@@ -99,7 +101,9 @@ export function Provider({ children }: { children: ReactNode }) {
         data,
         act,
         reset: () => {
-          persist(seed());
+          const fresh = seed();
+          fresh.trip.id = crypto.randomUUID();
+          persist(fresh);
           notify("체험 데이터를 처음 상태로 되돌렸어요.");
         },
         notify,

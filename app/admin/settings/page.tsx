@@ -89,7 +89,7 @@ export default function Settings() {
           </button>
           <div className="setting-row">
             <div>
-              <strong>위치 수신 중단</strong>
+              <strong>예시 노선 위치 수신 중단</strong>
               <p>학부모·운전자 화면의 오류 상태를 체험해요.</p>
             </div>
             <button
@@ -133,8 +133,9 @@ export default function Settings() {
           </ul>
           <div className="notice">
             현재 브라우저의 저장소를 사용하는 체험 앱입니다. 실제 인증, 기기 간
-            실시간 공유, GPS·지도 검색, 푸시 알림은 연결하지 않았습니다. 실제
-            아동 정보는 입력하지 마세요.
+            실시간 공유, 지도 검색, 푸시 알림은 연결하지 않았습니다. 휴대폰
+            GPS는 운전자 화면에서 시작할 수 있습니다. 실제 아동 정보는 입력하지
+            마세요.
           </div>
         </section>
         <section className="card setting-card">

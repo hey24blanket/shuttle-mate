@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { LocationProvider } from "@/components/location-provider";
+import "leaflet/dist/leaflet.css";
 import { Provider } from "@/components/provider";
 import "./globals.css";
 export const metadata: Metadata = {
@@ -11,7 +13,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <body>
-        <Provider>{children}</Provider>
+        <Provider>
+          <LocationProvider>{children}</LocationProvider>
+        </Provider>
       </body>
     </html>
   );
