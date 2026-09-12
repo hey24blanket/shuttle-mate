@@ -1,0 +1,40 @@
+# Shuttle Mate · 셔틀메이트
+
+세 역할이 같은 오늘의 운행을 바라보는 **인터랙티브 프로토타입**.
+
+- 운영자: `/admin` · 요청 처리, 노선, 원생, 이벤트 기록
+- 운전자: `/driver` · 메트로 타임라인, 승하차 확인, 안전 종료
+- 보호자: `/parent` · 내 아이 상태, 오늘 변경 요청과 결과
+
+## 실행
+
+Node.js 24 기준.
+
+```sh
+npm ci
+npm run dev
+npm test
+npm run typecheck
+npm run build
+```
+
+브라우저 테스트는 로컬 서버 실행 후 `npm run test:e2e`로 실행합니다. 기본적으로 설치된 Chrome을 사용합니다. 다른 배포는 `TEST_URL=https://... npm run test:e2e`로 검증합니다.
+
+## 체험 방법
+
+상단의 운영자 / 운전자 / 학부모를 바꿔가며 요청 → 승인 → 도착 → 탑승 → 출발 → 최종 하차 → 종료를 진행하세요. 설정에서 GPS 중단과 지연 상태를 체험하거나 초기화할 수 있습니다.
+
+모든 인물·경로는 예시 데이터입니다. 현재 브라우저에 상태를 보관하고 같은 브라우저 탭에 반영합니다. 실제 인증, GPS, 지도 검색, 푸시, 기기 간 동기화는 연결하지 않았습니다. 실제 아동 개인정보를 입력하지 마세요.
+
+보강된 기획과 후속 운영 전환 설계는 [제품 설계](docs/PRODUCT.md)를 참고하세요.
+
+## 구조
+
+- `lib/trip.ts`: 단일 상태 전이 함수와 검증 규칙
+- `lib/seed.ts`: 가상 운행/아동/요청 데이터
+- `components/provider.tsx`: 브라우저 저장과 탭 간 반영
+- `app/admin`, `app/driver`, `app/parent`: 역할별 화면
+- `tests/trip.test.ts`: 안전 조건 및 상태 전이 테스트
+- `tests/browser/journey.spec.ts`: 브라우저 역할 간 전체 흐름 검증
+
+기존 단일 HTML은 Git 이력에 보존되어 있습니다. 이전 `upgrade/trip-v1` 브랜치도 유지합니다. 기존 Firebase DB나 키를 읽거나 변경하지 않습니다.
