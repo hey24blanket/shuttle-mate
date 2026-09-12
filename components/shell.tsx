@@ -1,5 +1,6 @@
 "use client";
 import { useLocation } from "./location-provider";
+import { InstallApp } from "./install-app";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, ReactNode } from "react";
@@ -164,6 +165,7 @@ export function Shell({
             </button>
           </div>
         </header>
+        <InstallApp />
         {!online && (
           <div className="offline">
             <WifiOff size={17} />

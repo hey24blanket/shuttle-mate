@@ -3317,3 +3317,17 @@ blockquote {
     padding: 14px 16px;
   }
 }
+
+/* Installed app and home-screen installation */
+.install-strip { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 20px; background:#edf3e7; color:#173d35; font-size:12px; }
+.install-strip > span, .install-strip button { display:flex; align-items:center; gap:7px; }
+.install-strip button { border:1px solid #cbd8c1; border-radius:9px; padding:8px 10px; background:#fff; color:#173d35; font:inherit; font-weight:600; cursor:pointer; flex-shrink:0; }
+.install-steps { line-height:1.8; font-size:14px; margin:20px 0; }
+.install-steps h3 { font-size:15px; margin:18px 0 6px; }
+.install-steps ol { padding-left:22px; }
+.install-steps p { color:#65735e; font-size:12px; }
+@media (display-mode: standalone) {
+  body { padding-top:env(safe-area-inset-top); padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+  .app-footer { padding-bottom:max(20px, env(safe-area-inset-bottom)); }
+}
+@media (max-width:360px) { .install-strip { padding:8px 12px; font-size:11px; } }

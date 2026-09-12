@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { LocationProvider } from "@/components/location-provider";
 import "leaflet/dist/leaflet.css";
 import { Provider } from "@/components/provider";
@@ -8,6 +8,18 @@ export const metadata: Metadata = {
   description:
     "학부모, 운전자, 운영자가 함께 확인하는 오늘의 셔틀. 인터랙티브 프로토타입.",
   manifest: "/manifest.webmanifest",
+  applicationName: "셔틀메이트",
+  appleWebApp: { capable: true, title: "셔틀메이트", statusBarStyle: "default" },
+  icons: {
+    icon: "/icon.svg",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#173d35",
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
